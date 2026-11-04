@@ -38,11 +38,11 @@ export const HomePage: React.FC<HomePageProps> = ({
 }) => {
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex flex-col justify-between select-none">
-      {/* Architectural Background Photo (No Blur) */}
+      {/* Architectural Background Photo (205KB compressed, No Blur) */}
       <div
-        className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        className="fixed inset-0 z-0 bg-[#2C3539] bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/assets/aistudio/Property_valuation___Minimal_redesign_46e891c7.jpg')`,
+          backgroundImage: `url('/assets/aistudio/Property_valuation___Minimal_redesign__1__28fbeb0d.jpg')`,
         }}
       />
 
