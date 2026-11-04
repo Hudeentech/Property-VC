@@ -1,0 +1,6 @@
+{
+  "name": "Capital & Rental Value Calculator",
+  "description": "Professional property valuation tool to compute capital value with construction depreciation, land costs, and rental yields.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
