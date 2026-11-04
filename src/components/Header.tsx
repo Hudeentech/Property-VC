@@ -172,78 +172,76 @@ export const Header: React.FC<HeaderProps> = ({
         </header>
       )}
 
-      {/* Mobile Native Bottom Navigation Bar */}
-      <nav
-        aria-label="Mobile Bottom Navigation"
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#181B22]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-2 py-1.5 no-print"
-      >
-        <div className="grid grid-cols-5 gap-0.5 max-w-md mx-auto">
-          <button
-            type="button"
-            onClick={() => onSelectTab('home')}
-            className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer ${
-              activeTab === 'home'
-                ? 'text-[#1B3352] dark:text-[#F9C083] font-semibold'
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            <Home className="w-4 h-4 mb-0.5" />
-            <span>Home</span>
-          </button>
+      {/* Mobile Native Bottom Navigation Bar (Displayed on inner calculator, history, and settings pages) */}
+      {activeTab !== 'home' && (
+        <nav
+          aria-label="Mobile Bottom Navigation"
+          className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#181B22]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-2 py-1.5 no-print"
+        >
+          <div className="grid grid-cols-5 gap-0.5 max-w-md mx-auto">
+            <button
+              type="button"
+              onClick={() => onSelectTab('home')}
+              className="flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer text-slate-500 dark:text-slate-400"
+            >
+              <Home className="w-4 h-4 mb-0.5" />
+              <span>Home</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => onSelectTab('rental')}
-            className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer ${
-              activeTab === 'rental'
-                ? 'text-[#D68B42] dark:text-[#F9C083] font-semibold'
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            <KeyRound className="w-4 h-4 mb-0.5" />
-            <span>Rental</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => onSelectTab('rental')}
+              className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer ${
+                activeTab === 'rental'
+                  ? 'text-[#D68B42] dark:text-[#F9C083] font-semibold'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              <KeyRound className="w-4 h-4 mb-0.5" />
+              <span>Rental</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => onSelectTab('capital')}
-            className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer ${
-              activeTab === 'capital'
-                ? 'text-[#1B3352] dark:text-[#F9C083] font-semibold'
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            <Building2 className="w-4 h-4 mb-0.5" />
-            <span>Capital</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => onSelectTab('capital')}
+              className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer ${
+                activeTab === 'capital'
+                  ? 'text-[#1B3352] dark:text-[#F9C083] font-semibold'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              <Building2 className="w-4 h-4 mb-0.5" />
+              <span>Capital</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => onSelectTab('history')}
-            className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer ${
-              activeTab === 'history'
-                ? 'text-[#1B3352] dark:text-[#F9C083] font-semibold'
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            <History className="w-4 h-4 mb-0.5" />
-            <span>History{historyCount > 0 ? ` (${historyCount})` : ''}</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => onSelectTab('history')}
+              className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer ${
+                activeTab === 'history'
+                  ? 'text-[#1B3352] dark:text-[#F9C083] font-semibold'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              <History className="w-4 h-4 mb-0.5" />
+              <span>History{historyCount > 0 ? ` (${historyCount})` : ''}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => onSelectTab('settings')}
-            className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer ${
-              activeTab === 'settings'
-                ? 'text-[#1B3352] dark:text-[#F9C083] font-semibold'
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            <Settings className="w-4 h-4 mb-0.5" />
-            <span>Settings</span>
-          </button>
-        </div>
-      </nav>
+            <button
+              type="button"
+              onClick={() => onSelectTab('settings')}
+              className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer ${
+                activeTab === 'settings'
+                  ? 'text-[#1B3352] dark:text-[#F9C083] font-semibold'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              <Settings className="w-4 h-4 mb-0.5" />
+              <span>Settings</span>
+            </button>
+          </div>
+        </nav>
+      )}
     </>
   );
 };

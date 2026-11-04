@@ -38,19 +38,16 @@ export const HomePage: React.FC<HomePageProps> = ({
 }) => {
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex flex-col justify-between select-none">
-      {/* Architectural Background Photo with Warm Moody Overlay */}
+      {/* Architectural Background Photo (No Blur) */}
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/assets/aistudio/Property_valuation___Minimal_redesign_8c19dc57.jpg')`,
+          backgroundImage: `url('/assets/aistudio/Property_valuation___Minimal_redesign_46e891c7.jpg')`,
         }}
-      >
-        {/* Subtle moody architectural gradient overlay so cards and white header pop cleanly */}
-        <div className="absolute inset-0 bg-[#1B2B3A]/75 dark:bg-[#0D1520]/85 backdrop-blur-md" />
-      </div>
+      />
 
       {/* Main Content Container */}
-      <div className="relative z-10 w-full max-w-[1280px] mx-auto px-5 sm:px-10 md:px-14 pt-8 sm:pt-12 pb-24 sm:pb-14 flex-1 flex flex-col justify-between">
+      <div className="relative z-10 w-full max-w-[1280px] mx-auto px-5 sm:px-10 md:px-14 pt-8 sm:pt-12 pb-8 sm:pb-14 flex-1 flex flex-col justify-between">
         {/* Top Brand Header */}
         <header className="flex items-start justify-between gap-4 mb-8 sm:mb-12">
           <div>
