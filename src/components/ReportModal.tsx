@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ConstructionVariable, LandData, RentalUnit, ValuationSummary } from '../types/valuation';
 import { calculateConstructionItem, calculateRentalItem, formatCurrency } from '../utils/calculator';
-import { Printer, X, FileText, CheckCircle2 } from 'lucide-react';
+import { exportValuationReportToPdf } from '../utils/pdfExport';
+import { Download, Printer, X, KeyRound, Building2, Layers } from 'lucide-react';
+
+export type ReportTemplateType = 'rental' | 'capital' | 'combined';
 
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultTemplate?: ReportTemplateType;
+  reportTitle?: string;
   constructionVariables: ConstructionVariable[];
   land: LandData;
   rentalUnits: RentalUnit[];
@@ -17,6 +22,8 @@ interface ReportModalProps {
 export const ReportModal: React.FC<ReportModalProps> = ({
   isOpen,
   onClose,
+  defaultTemplate = 'rental',
+  reportTitle,
   constructionVariables,
   land,
   rentalUnits,
@@ -24,47 +31,146 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   currencyCode,
   locale,
 }) => {
+  const [template, setTemplate] = useState<ReportTemplateType>(defaultTemplate);
+  const [isExporting, setIsExporting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTemplate(defaultTemplate);
+    }
+  }, [isOpen, defaultTemplate]);
+
   if (!isOpen) return null;
 
   const handlePrint = () => {
     window.print();
   };
 
+  const handleExportPdf = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      await exportValuationReportToPdf({
+        template,
+        reportTitle,
+        constructionVariables,
+        land,
+        rentalUnits,
+        summary,
+        currencyCode,
+        locale,
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const today = new Date().toLocaleDateString(locale, {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
   });
+
+  const totalLettableArea = rentalUnits.reduce(
+    (sum, u) => sum + (Number(u.area) > 0 ? Number(u.area) : 0),
+    0
+  );
+  const avgRentPerSqM =
+    totalLettableArea > 0 ? summary.totalAnnualRentalValue / totalLettableArea : 0;
+
+  const showCapital = template === 'capital' || template === 'combined';
+  const showRental = template === 'rental' || template === 'combined';
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="report-modal-title"
-      className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-50 bg-[#12151C]/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-6"
     >
-      <div className="relative bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-5 sm:p-7 shadow-xl border border-slate-200">
-        {/* Modal Controls (Hidden in print) */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-xs z-10 flex items-center justify-between border-b border-slate-200 pb-3.5 mb-5 no-print">
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-blue-600" />
-            <h2 id="report-modal-title" className="text-base font-bold text-slate-900">
-              Valuation Report
-            </h2>
+      <div className="relative bg-white dark:bg-[#181B22] rounded-t-[24px] sm:rounded-[24px] max-w-3xl w-full max-h-[92vh] overflow-y-auto p-4 sm:p-7 shadow-2xl border border-slate-200/90 dark:border-slate-800">
+        {/* Top Action Bar & Template Switcher (Hidden in Print) */}
+        <div className="sticky top-0 bg-white/95 dark:bg-[#181B22]/95 backdrop-blur-md z-20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 mb-4 sm:mb-5 no-print">
+          <div className="flex items-center justify-between gap-2">
+            {/* Template Selector */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/90 p-1 rounded-xl flex-1 sm:flex-initial">
+              <button
+                type="button"
+                onClick={() => setTemplate('rental')}
+                className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  template === 'rental'
+                    ? 'bg-[#F9C083] text-[#1E1E1E] shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <KeyRound className="w-3.5 h-3.5 shrink-0" />
+                <span>Rental</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTemplate('capital')}
+                className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  template === 'capital'
+                    ? 'bg-[#1B3352] text-white shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Building2 className="w-3.5 h-3.5 shrink-0" />
+                <span>Capital</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTemplate('combined')}
+                className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  template === 'combined'
+                    ? 'bg-[#222325] text-white shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5 text-[#F9C083] shrink-0" />
+                <span>Full</span>
+              </button>
+            </div>
+
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="sm:hidden p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 dark:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+              aria-label="Close report modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Export B&W PDF, Print & Desktop Close Buttons */}
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              disabled={isExporting}
+              title="Downloads a printer-friendly Black & White desktop A4 PDF"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-[#1B3352] hover:bg-[#13253D] disabled:opacity-60 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors cursor-pointer shadow-2xs"
+            >
+              <Download className="w-3.5 h-3.5 text-[#F9C083]" />
+              <span>{isExporting ? 'Exporting…' : 'Export PDF (B&W)'}</span>
+            </button>
             <button
               type="button"
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium px-3 py-2 rounded-xl transition-colors cursor-pointer"
+              title="Print report"
+              aria-label="Print report"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print / PDF</span>
+              <span className="hidden sm:inline">Print</span>
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              className="hidden sm:inline-flex p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
               aria-label="Close report modal"
             >
               <X className="w-4 h-4" />
@@ -72,228 +178,412 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           </div>
         </div>
 
-        {/* Printable Document Content */}
-        <div className="printable-report text-[#101828]">
-          {/* Header */}
-          <div className="border-b-2 border-[#101828] pb-4 mb-6 flex flex-wrap justify-between items-start gap-4">
-            <div>
-              <div className="text-xs uppercase tracking-widest text-[#2165f5] font-extrabold mb-1">
-                Valuation Summary Certificate
+        {/* On-Screen Brand Report Surface */}
+        <div className="printable-report bg-white text-[#1E1E1E] rounded-2xl">
+          {/* Clean Brand Header Banner */}
+          {template === 'rental' ? (
+            <div className="relative overflow-hidden rounded-[20px] sm:rounded-[22px] bg-[#F9C083] text-[#1E1E1E] p-4 sm:p-6 mb-4 sm:mb-5">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-14 -left-14 w-36 sm:w-40 h-36 sm:h-40 rounded-full border-[14px] sm:border-[16px] border-[#D68B42]/55"
+              />
+              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                <div>
+                  <h1
+                    id="report-modal-title"
+                    className="text-xl sm:text-3xl font-bold tracking-tight text-[#1E1E1E]"
+                  >
+                    {reportTitle || 'Rental Value'}
+                  </h1>
+                  <p className="text-xs text-[#2C2620]/80 mt-0.5">{today}</p>
+                </div>
+
+                <div className="pt-2 sm:pt-0 border-t border-[#D68B42]/25 sm:border-0 text-left sm:text-right">
+                  <span className="text-[11px] sm:text-xs font-medium text-[#2C2620]/80 block">
+                    Annual Rental Value
+                  </span>
+                  <strong className="text-lg sm:text-2xl font-bold tracking-tight text-[#1E1E1E] tabular-nums">
+                    {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
+                  </strong>
+                </div>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                Capital &amp; Rental Value Appraisal
-              </h1>
-              <p className="text-xs text-[#667085] mt-1">
-                Generated by Property Valuation Tool • Standard Depreciated Replacement Cost (DRC)
-              </p>
             </div>
-            <div className="text-right text-xs text-[#475467]">
-              <div><strong className="text-[#101828]">Date:</strong> {today}</div>
-              <div><strong className="text-[#101828]">Currency:</strong> {currencyCode}</div>
-              <div><strong className="text-[#101828]">Status:</strong> Official Assessment</div>
-            </div>
-          </div>
+          ) : (
+            <div className="relative overflow-hidden rounded-[20px] sm:rounded-[22px] bg-[#1B3352] text-white p-4 sm:p-6 mb-4 sm:mb-5">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-16 -right-10 w-40 sm:w-48 h-40 sm:h-48 rounded-full border-[18px] sm:border-[20px] border-white/[0.06]"
+              />
+              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                <div>
+                  <h1
+                    id="report-modal-title"
+                    className="text-xl sm:text-3xl font-bold tracking-tight text-white"
+                  >
+                    {reportTitle ||
+                      (template === 'capital' ? 'Capital Value' : 'Property Valuation')}
+                  </h1>
+                  <p className="text-xs text-white/75 mt-0.5">{today}</p>
+                </div>
 
-          {/* Executive Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-            <div className="bg-[#f8faff] border border-[#d4e2fc] rounded-xl p-4">
-              <span className="text-xs text-[#53627c] font-semibold block">Total Capital Value</span>
-              <span className="text-xl sm:text-2xl font-black text-[#101828] block mt-1">
-                {formatCurrency(summary.totalCapitalValue, currencyCode, locale)}
-              </span>
-              <span className="text-[11px] text-[#667085] mt-1 block">
-                Net construction + land value
-              </span>
+                <div className="pt-2 sm:pt-0 border-t border-white/15 sm:border-0 text-left sm:text-right">
+                  <span className="text-[11px] sm:text-xs font-medium text-[#F9C083] block">
+                    Total Capital Value
+                  </span>
+                  <strong className="text-lg sm:text-2xl font-bold tracking-tight text-white tabular-nums">
+                    {formatCurrency(summary.totalCapitalValue, currencyCode, locale)}
+                  </strong>
+                </div>
+              </div>
             </div>
+          )}
 
-            <div className="bg-[#f8faff] border border-[#d4e2fc] rounded-xl p-4">
-              <span className="text-xs text-[#53627c] font-semibold block">Annual Rental Value</span>
-              <span className="text-xl sm:text-2xl font-black text-[#101828] block mt-1">
-                {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
-              </span>
-              <span className="text-[11px] text-[#667085] mt-1 block">
-                {formatCurrency(summary.totalMonthlyRentalValue, currencyCode, locale)}/month
-              </span>
+          {/* Brand Bento Summary Cards (Compact 2-col/stack on mobile, 3-col on desktop) */}
+          {template === 'rental' && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+              <div className="col-span-2 sm:col-span-1 rounded-2xl bg-[#F9C083] text-[#1E1E1E] p-3.5 sm:p-4">
+                <span className="text-xs font-medium text-[#2C2620] block">Annual Rent</span>
+                <span className="text-base sm:text-xl font-bold tracking-tight text-[#1E1E1E] block mt-0.5 sm:mt-1 tabular-nums break-words">
+                  {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
+                </span>
+              </div>
+
+              <div className="rounded-2xl bg-[#1B3352] text-white p-3.5 sm:p-4">
+                <span className="text-xs font-medium text-[#F9C083] block">Monthly Rent</span>
+                <span className="text-sm sm:text-xl font-bold tracking-tight text-white block mt-0.5 sm:mt-1 tabular-nums break-words">
+                  {formatCurrency(summary.totalMonthlyRentalValue, currencyCode, locale)}
+                </span>
+              </div>
+
+              <div className="rounded-2xl bg-[#222325] text-white p-3.5 sm:p-4">
+                <span className="text-xs font-medium text-[#F9C083] block">Lettable Area</span>
+                <span className="text-sm sm:text-xl font-bold tracking-tight text-white block mt-0.5 sm:mt-1 tabular-nums">
+                  {totalLettableArea.toLocaleString()} m²
+                </span>
+                {avgRentPerSqM > 0 && (
+                  <span className="hidden sm:block text-[11px] text-white/70 mt-0.5">
+                    Avg {formatCurrency(avgRentPerSqM, currencyCode, locale)}/m²
+                  </span>
+                )}
+              </div>
             </div>
+          )}
 
-            <div className="bg-[#f8faff] border border-[#d4e2fc] rounded-xl p-4">
-              <span className="text-xs text-[#53627c] font-semibold block">Gross Rental Yield</span>
-              <span className="text-xl sm:text-2xl font-black text-[#168653] block mt-1">
-                {summary.grossRentalYieldPercent > 0
-                  ? `${summary.grossRentalYieldPercent.toFixed(2)}%`
-                  : 'N/A'}
-              </span>
-              <span className="text-[11px] text-[#667085] mt-1 block">
-                Annual Rent ÷ Capital Value
-              </span>
+          {template === 'capital' && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+              <div className="col-span-2 sm:col-span-1 rounded-2xl bg-[#1B3352] text-white p-3.5 sm:p-4">
+                <span className="text-xs font-medium text-[#F9C083] block">Capital Value</span>
+                <span className="text-base sm:text-xl font-bold tracking-tight text-white block mt-0.5 sm:mt-1 tabular-nums break-words">
+                  {formatCurrency(summary.totalCapitalValue, currencyCode, locale)}
+                </span>
+              </div>
+
+              <div className="rounded-2xl bg-[#F9C083] text-[#1E1E1E] p-3.5 sm:p-4">
+                <span className="text-xs font-medium text-[#2C2620] block">Buildings (Net)</span>
+                <span className="text-sm sm:text-xl font-bold tracking-tight text-[#1E1E1E] block mt-0.5 sm:mt-1 tabular-nums break-words">
+                  {formatCurrency(summary.constructionNetTotal, currencyCode, locale)}
+                </span>
+              </div>
+
+              <div className="rounded-2xl bg-[#222325] text-white p-3.5 sm:p-4">
+                <span className="text-xs font-medium text-[#F9C083] block">Land Value</span>
+                <span className="text-sm sm:text-xl font-bold tracking-tight text-white block mt-0.5 sm:mt-1 tabular-nums break-words">
+                  {formatCurrency(summary.landValueTotal, currencyCode, locale)}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Section 1: Construction Components Breakdown Table */}
-          <div className="mb-6">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-[#475467] mb-2.5 flex items-center gap-1.5">
-              <span>1. Construction Components Breakdown</span>
-            </h3>
-            <div className="overflow-x-auto border border-[#e5eaf2] rounded-lg">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#f2f5fc] text-[#475467] font-semibold">
-                  <tr>
-                    <th className="py-2.5 px-3">Item / Component</th>
-                    <th className="py-2.5 px-3 text-right">Area (m²)</th>
-                    <th className="py-2.5 px-3 text-right">Rate / m²</th>
-                    <th className="py-2.5 px-3 text-right">Gross Value</th>
-                    <th className="py-2.5 px-3 text-right">Depr (%)</th>
-                    <th className="py-2.5 px-3 text-right">Net Final Value</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#e5eaf2]">
+          {template === 'combined' && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+              <div className="rounded-2xl bg-[#1B3352] text-white p-3.5 sm:p-4">
+                <span className="text-xs font-medium text-[#F9C083] block">Capital Value</span>
+                <span className="text-sm sm:text-xl font-bold tracking-tight text-white block mt-0.5 sm:mt-1 tabular-nums break-words">
+                  {formatCurrency(summary.totalCapitalValue, currencyCode, locale)}
+                </span>
+              </div>
+
+              <div className="rounded-2xl bg-[#F9C083] text-[#1E1E1E] p-3.5 sm:p-4">
+                <span className="text-xs font-medium text-[#2C2620] block">Annual Rent</span>
+                <span className="text-sm sm:text-xl font-bold tracking-tight text-[#1E1E1E] block mt-0.5 sm:mt-1 tabular-nums break-words">
+                  {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
+                </span>
+              </div>
+
+              <div className="col-span-2 sm:col-span-1 rounded-2xl bg-[#222325] text-white p-3.5 sm:p-4">
+                <span className="text-xs font-medium text-[#F9C083] block">Rental Yield</span>
+                <span className="text-base sm:text-xl font-bold tracking-tight text-[#F9C083] block mt-0.5 sm:mt-1 tabular-nums">
+                  {summary.grossRentalYieldPercent > 0
+                    ? `${summary.grossRentalYieldPercent.toFixed(2)}%`
+                    : '—'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Rental Schedule Section */}
+          {showRental && (
+            <div className="mb-5 last:mb-0">
+              <h3 className="text-xs font-semibold text-slate-600 mb-2">
+                Rental Breakdown
+              </h3>
+
+              {/* Simple Mobile Cards (< sm) */}
+              <div className="sm:hidden space-y-2">
+                {rentalUnits.map((u, i) => {
+                  const c = calculateRentalItem(u);
+                  return (
+                    <div
+                      key={u.id}
+                      className="rounded-xl border border-slate-200 p-3 bg-white flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-[#1E1E1E] truncate">
+                          {u.title || `Space ${i + 1}`}
+                        </div>
+                        <div className="text-[11px] text-slate-500 tabular-nums mt-0.5">
+                          {u.area.toLocaleString()} m² ×{' '}
+                          {formatCurrency(u.rentRatePerSqM, currencyCode, locale)}
+                          {u.period === 'monthly' ? '/mo' : '/yr'}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-xs font-bold text-[#1B3352] tabular-nums">
+                          {formatCurrency(c.annualValue, currencyCode, locale)}
+                        </div>
+                        <div className="text-[10px] text-slate-400 tabular-nums">
+                          {formatCurrency(c.monthlyValue, currencyCode, locale)}/mo
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="rounded-xl bg-[#F9C083]/30 border border-[#D68B42]/30 p-3 flex items-center justify-between text-xs font-bold">
+                  <span className="text-[#1E1E1E]">Total Annual Rent</span>
+                  <span className="text-[#1B3352] tabular-nums">
+                    {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Full Desktop Table (sm+) */}
+              <div className="hidden sm:block overflow-x-auto border border-slate-200 rounded-2xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#1B3352] text-white font-semibold">
+                    <tr>
+                      <th className="py-2.5 px-3.5">Description</th>
+                      <th className="py-2.5 px-3.5 text-right">Area (m²)</th>
+                      <th className="py-2.5 px-3.5 text-right">Rate / m²</th>
+                      <th className="py-2.5 px-3.5 text-right">Monthly</th>
+                      <th className="py-2.5 px-3.5 text-right">Annual Rent</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 bg-white">
+                    {rentalUnits.map((u, i) => {
+                      const c = calculateRentalItem(u);
+                      return (
+                        <tr key={u.id}>
+                          <td className="py-2.5 px-3.5 font-medium text-[#1E1E1E]">
+                            {u.title || `Space ${i + 1}`}
+                          </td>
+                          <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-700">
+                            {u.area.toLocaleString()} m²
+                          </td>
+                          <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-700">
+                            {formatCurrency(u.rentRatePerSqM, currencyCode, locale)}
+                            <span className="text-[10px] text-slate-400">
+                              {u.period === 'monthly' ? '/mo' : '/yr'}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-600">
+                            {formatCurrency(c.monthlyValue, currencyCode, locale)}
+                          </td>
+                          <td className="py-2.5 px-3.5 text-right font-bold tabular-nums text-[#1B3352]">
+                            {formatCurrency(c.annualValue, currencyCode, locale)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot className="bg-[#F9C083]/25 font-bold border-t border-slate-200">
+                    <tr>
+                      <td className="py-2.5 px-3.5 text-[#1E1E1E]">Total</td>
+                      <td className="py-2.5 px-3.5 text-right tabular-nums text-[#1E1E1E]">
+                        {totalLettableArea.toLocaleString()} m²
+                      </td>
+                      <td className="py-2.5 px-3.5 text-right text-slate-400">—</td>
+                      <td className="py-2.5 px-3.5 text-right tabular-nums text-[#2C2620]">
+                        {formatCurrency(summary.totalMonthlyRentalValue, currencyCode, locale)}
+                      </td>
+                      <td className="py-2.5 px-3.5 text-right tabular-nums text-[#1B3352]">
+                        {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Capital Value Sections (Construction + Land) */}
+          {showCapital && (
+            <div className="space-y-4 sm:space-y-5">
+              <div>
+                <h3 className="text-xs font-semibold text-slate-600 mb-2">
+                  Construction Components
+                </h3>
+
+                {/* Simple Mobile Cards (< sm) */}
+                <div className="sm:hidden space-y-2">
                   {constructionVariables.map((v, i) => {
                     const c = calculateConstructionItem(v);
                     return (
-                      <tr key={v.id} className="hover:bg-[#fafbfd]">
-                        <td className="py-2 px-3 font-medium text-[#101828]">
-                          {v.title || `Construction Variable ${i + 1}`}
-                        </td>
-                        <td className="py-2 px-3 text-right">{v.area.toLocaleString()} m²</td>
-                        <td className="py-2 px-3 text-right">
-                          {formatCurrency(v.costPerSqM, currencyCode, locale)}
-                        </td>
-                        <td className="py-2 px-3 text-right text-[#475467]">
-                          {formatCurrency(c.grossValue, currencyCode, locale)}
-                        </td>
-                        <td className="py-2 px-3 text-right text-[#b42318]">
-                          {v.depreciationPercent}%
-                        </td>
-                        <td className="py-2 px-3 text-right font-bold text-[#101828]">
-                          {formatCurrency(c.finalValue, currencyCode, locale)}
-                        </td>
-                      </tr>
+                      <div
+                        key={v.id}
+                        className="rounded-xl border border-slate-200 p-3 bg-white flex items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-xs font-semibold text-[#1E1E1E] truncate">
+                            {v.title || `Component ${i + 1}`}
+                          </div>
+                          <div className="text-[11px] text-slate-500 tabular-nums mt-0.5">
+                            {v.area.toLocaleString()} m² · Depr. {v.depreciationPercent}%
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className="text-xs font-bold text-[#1B3352] tabular-nums">
+                            {formatCurrency(c.finalValue, currencyCode, locale)}
+                          </div>
+                          <div className="text-[10px] text-slate-400 tabular-nums">
+                            Gross {formatCurrency(c.grossValue, currencyCode, locale)}
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-                <tfoot className="bg-[#f8faff] font-bold border-t border-[#e5eaf2]">
-                  <tr>
-                    <td className="py-2.5 px-3 text-[#101828]">Net Construction Total</td>
-                    <td className="py-2.5 px-3 text-right text-[#101828]">
-                      {summary.totalBuiltAreaSqM.toLocaleString()} m²
-                    </td>
-                    <td className="py-2.5 px-3 text-right text-[#667085]">—</td>
-                    <td className="py-2.5 px-3 text-right text-[#475467]">
-                      {formatCurrency(summary.constructionGrossTotal, currencyCode, locale)}
-                    </td>
-                    <td className="py-2.5 px-3 text-right text-[#b42318]">
-                      −{formatCurrency(summary.constructionDepreciationTotal, currencyCode, locale)}
-                    </td>
-                    <td className="py-2.5 px-3 text-right text-[#2165f5]">
+                  <div className="rounded-xl bg-slate-100 p-3 flex items-center justify-between text-xs font-bold">
+                    <span className="text-[#1B3352]">Buildings Total</span>
+                    <span className="text-[#1B3352] tabular-nums">
                       {formatCurrency(summary.constructionNetTotal, currencyCode, locale)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
+                    </span>
+                  </div>
+                </div>
 
-          {/* Section 2: Land Valuation */}
-          <div className="mb-6">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-[#475467] mb-2.5">
-              2. Land Valuation Assessment
-            </h3>
-            <div className="overflow-x-auto border border-[#e5eaf2] rounded-lg">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#f2f5fc] text-[#475467] font-semibold">
-                  <tr>
-                    <th className="py-2.5 px-3">Land Title / Description</th>
-                    <th className="py-2.5 px-3 text-right">Site Area (m²)</th>
-                    <th className="py-2.5 px-3 text-right">Land Rate / m²</th>
-                    <th className="py-2.5 px-3 text-right">Total Land Value</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#e5eaf2]">
-                  <tr>
-                    <td className="py-2 px-3 font-medium text-[#101828]">
-                      {land.title || 'Main property land'}
-                    </td>
-                    <td className="py-2 px-3 text-right">{land.area.toLocaleString()} m²</td>
-                    <td className="py-2 px-3 text-right">
-                      {formatCurrency(land.costPerSqM, currencyCode, locale)}
-                    </td>
-                    <td className="py-2 px-3 text-right font-bold text-[#168653]">
-                      {formatCurrency(summary.landValueTotal, currencyCode, locale)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Section 3: Rental Income Valuation */}
-          <div className="mb-6">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-[#475467] mb-2.5">
-              3. Rental Income Assessment
-            </h3>
-            <div className="overflow-x-auto border border-[#e5eaf2] rounded-lg">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#f2f5fc] text-[#475467] font-semibold">
-                  <tr>
-                    <th className="py-2.5 px-3">Lettable Space / Unit</th>
-                    <th className="py-2.5 px-3 text-right">Lettable Area (m²)</th>
-                    <th className="py-2.5 px-3 text-right">Expected Rent / m²</th>
-                    <th className="py-2.5 px-3 text-right">Monthly Rent</th>
-                    <th className="py-2.5 px-3 text-right">Annual Rental Value</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#e5eaf2]">
-                  {rentalUnits.map((u, i) => {
-                    const c = calculateRentalItem(u);
-                    return (
-                      <tr key={u.id} className="hover:bg-[#fafbfd]">
-                        <td className="py-2 px-3 font-medium text-[#101828]">
-                          {u.title || `Lettable Space ${i + 1}`}
+                {/* Full Desktop Table (sm+) */}
+                <div className="hidden sm:block overflow-x-auto border border-slate-200 rounded-2xl">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#1B3352] text-white font-semibold">
+                      <tr>
+                        <th className="py-2.5 px-3.5">Component</th>
+                        <th className="py-2.5 px-3.5 text-right">Area (m²)</th>
+                        <th className="py-2.5 px-3.5 text-right">Cost / m²</th>
+                        <th className="py-2.5 px-3.5 text-right">Gross</th>
+                        <th className="py-2.5 px-3.5 text-right">Depr.</th>
+                        <th className="py-2.5 px-3.5 text-right">Net Value</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      {constructionVariables.map((v, i) => {
+                        const c = calculateConstructionItem(v);
+                        return (
+                          <tr key={v.id}>
+                            <td className="py-2.5 px-3.5 font-medium text-[#1E1E1E]">
+                              {v.title || `Component ${i + 1}`}
+                            </td>
+                            <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-700">
+                              {v.area.toLocaleString()} m²
+                            </td>
+                            <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-700">
+                              {formatCurrency(v.costPerSqM, currencyCode, locale)}
+                            </td>
+                            <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-600">
+                              {formatCurrency(c.grossValue, currencyCode, locale)}
+                            </td>
+                            <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-500">
+                              {v.depreciationPercent}%
+                            </td>
+                            <td className="py-2.5 px-3.5 text-right font-bold tabular-nums text-[#1B3352]">
+                              {formatCurrency(c.finalValue, currencyCode, locale)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot className="bg-slate-50 font-bold border-t border-slate-200">
+                      <tr>
+                        <td className="py-2.5 px-3.5 text-[#1B3352]">Buildings Total</td>
+                        <td className="py-2.5 px-3.5 text-right tabular-nums text-[#1E1E1E]">
+                          {summary.totalBuiltAreaSqM.toLocaleString()} m²
                         </td>
-                        <td className="py-2 px-3 text-right">{u.area.toLocaleString()} m²</td>
-                        <td className="py-2 px-3 text-right">
-                          {formatCurrency(u.rentRatePerSqM, currencyCode, locale)}
+                        <td className="py-2.5 px-3.5 text-right text-slate-400">—</td>
+                        <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-700">
+                          {formatCurrency(summary.constructionGrossTotal, currencyCode, locale)}
                         </td>
-                        <td className="py-2 px-3 text-right text-[#475467]">
-                          {formatCurrency(c.monthlyValue, currencyCode, locale)}
+                        <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-500">
+                          −{formatCurrency(summary.constructionDepreciationTotal, currencyCode, locale)}
                         </td>
-                        <td className="py-2 px-3 text-right font-bold text-[#101828]">
-                          {formatCurrency(c.annualValue, currencyCode, locale)}
+                        <td className="py-2.5 px-3.5 text-right tabular-nums text-[#1B3352]">
+                          {formatCurrency(summary.constructionNetTotal, currencyCode, locale)}
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-                <tfoot className="bg-[#f8faff] font-bold border-t border-[#e5eaf2]">
-                  <tr>
-                    <td colSpan={4} className="py-2.5 px-3 text-[#101828]">
-                      Total Annualized Rental Income
-                    </td>
-                    <td className="py-2.5 px-3 text-right text-[#2165f5]">
-                      {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-
-          {/* Signature and Verification Footer */}
-          <div className="border-t border-[#e5eaf2] pt-4 mt-6 text-xs text-[#667085] flex flex-wrap justify-between items-end gap-6">
-            <div className="max-w-md">
-              <div className="flex items-center gap-1.5 text-[#168653] font-semibold mb-1">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Verified Valuation Model</span>
+                    </tfoot>
+                  </table>
+                </div>
               </div>
-              <p className="leading-relaxed">
-                Appraisal produced using replacement cost method minus straight-line depreciation plus prevailing land market rate.
-              </p>
+
+              <div>
+                <h3 className="text-xs font-semibold text-slate-600 mb-2">
+                  Land Value
+                </h3>
+
+                {/* Simple Mobile Card (< sm) */}
+                <div className="sm:hidden rounded-xl border border-slate-200 p-3 bg-white flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-[#1E1E1E] truncate">
+                      {land.title || 'Main property land'}
+                    </div>
+                    <div className="text-[11px] text-slate-500 tabular-nums mt-0.5">
+                      {land.area.toLocaleString()} m² ×{' '}
+                      {formatCurrency(land.costPerSqM, currencyCode, locale)}/m²
+                    </div>
+                  </div>
+                  <div className="text-xs font-bold text-[#1B3352] tabular-nums shrink-0">
+                    {formatCurrency(summary.landValueTotal, currencyCode, locale)}
+                  </div>
+                </div>
+
+                {/* Full Desktop Table (sm+) */}
+                <div className="hidden sm:block overflow-x-auto border border-slate-200 rounded-2xl">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#222325] text-white font-semibold">
+                      <tr>
+                        <th className="py-2.5 px-3.5">Description</th>
+                        <th className="py-2.5 px-3.5 text-right">Area (m²)</th>
+                        <th className="py-2.5 px-3.5 text-right">Cost / m²</th>
+                        <th className="py-2.5 px-3.5 text-right">Land Value</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 bg-white">
+                      <tr>
+                        <td className="py-2.5 px-3.5 font-medium text-[#1E1E1E]">
+                          {land.title || 'Main property land'}
+                        </td>
+                        <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-700">
+                          {land.area.toLocaleString()} m²
+                        </td>
+                        <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-700">
+                          {formatCurrency(land.costPerSqM, currencyCode, locale)}
+                        </td>
+                        <td className="py-2.5 px-3.5 text-right font-bold tabular-nums text-[#1B3352]">
+                          {formatCurrency(summary.landValueTotal, currencyCode, locale)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-            <div className="text-right">
-              <div className="w-40 border-b border-[#98a2b3] mb-1"></div>
-              <span className="text-[11px] text-[#667085]">Authorized Valuation Signature</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

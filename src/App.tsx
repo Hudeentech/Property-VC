@@ -122,6 +122,8 @@ export default function App() {
   });
 
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [reportTemplate, setReportTemplate] = useState<'rental' | 'capital' | 'combined'>('rental');
+  const [reportTitle, setReportTitle] = useState<string | undefined>(undefined);
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
 
   // Sync current inputs to local storage
@@ -228,6 +230,22 @@ export default function App() {
     setActiveTab(item.type === 'capital' ? 'capital' : 'rental');
   };
 
+  const handleViewHistoryReport = (item: ValuationHistoryItem) => {
+    setCurrencyCode(item.currencyCode);
+    setConstructionVariables(item.constructionVariables.map((v) => ({ ...v })));
+    setLand({ ...item.land });
+    setRentalUnits(item.rentalUnits.map((r) => ({ ...r })));
+    setReportTemplate(item.type === 'capital' ? 'capital' : 'rental');
+    setReportTitle(item.label);
+    setIsReportOpen(true);
+  };
+
+  const handleOpenCurrentReport = () => {
+    setReportTemplate(activeTab === 'capital' ? 'capital' : 'rental');
+    setReportTitle(undefined);
+    setIsReportOpen(true);
+  };
+
   const handleDeleteHistoryItem = (id: string) => {
     setHistory((prev) => prev.filter((item) => item.id !== id));
   };
@@ -253,7 +271,7 @@ export default function App() {
             onSelectTab={setActiveTab}
             onSaveToHistory={handleSaveToHistory}
             onReset={handleReset}
-            onOpenReport={() => setIsReportOpen(true)}
+            onOpenReport={handleOpenCurrentReport}
           />
         </>
       ) : (
@@ -265,7 +283,7 @@ export default function App() {
             onSelectTab={setActiveTab}
             onSaveToHistory={handleSaveToHistory}
             onReset={handleReset}
-            onOpenReport={() => setIsReportOpen(true)}
+            onOpenReport={handleOpenCurrentReport}
           />
 
           {/* Subtle Save Confirmation Banner */}
@@ -334,6 +352,7 @@ export default function App() {
             <HistoryPage
               history={history}
               onLoadItem={handleLoadHistoryItem}
+              onViewReport={handleViewHistoryReport}
               onDeleteItem={handleDeleteHistoryItem}
               onClearAll={handleClearHistory}
               onGoToCalculator={() => setActiveTab('rental')}
@@ -364,6 +383,8 @@ export default function App() {
           <ReportModal
             isOpen={isReportOpen}
             onClose={() => setIsReportOpen(false)}
+            defaultTemplate={reportTemplate}
+            reportTitle={reportTitle}
             constructionVariables={constructionVariables}
             land={land}
             rentalUnits={rentalUnits}

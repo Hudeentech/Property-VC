@@ -42,9 +42,10 @@ html, body {
 }
 
 @media print {
-  body {
+  body, .printable-report {
     background: white !important;
-    color: #101828 !important;
+    color: #000000 !important;
+    filter: grayscale(100%) !important;
   }
   .no-print {
     display: none !important;
@@ -57,3 +58,5 @@ html, body {
     page-break-inside: avoid;
   }
 }
+
+

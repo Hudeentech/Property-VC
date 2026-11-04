@@ -53,15 +53,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             onClick={() => onThemeChange('light')}
             className={`flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
               theme === 'light'
-                ? 'border-blue-600 bg-blue-50/40 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 font-semibold'
+                ? 'border-[#1B3352] bg-[#1B3352] text-white font-semibold shadow-2xs'
                 : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-700 dark:text-slate-300'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <Sun className="w-4 h-4" />
+              <Sun className={`w-4 h-4 ${theme === 'light' ? 'text-[#F9C083]' : ''}`} />
               <span className="text-sm">Light Mode</span>
             </div>
-            {theme === 'light' && <Check className="w-4 h-4" />}
+            {theme === 'light' && <Check className="w-4 h-4 text-[#F9C083]" />}
           </button>
 
           <button
@@ -69,15 +69,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             onClick={() => onThemeChange('dark')}
             className={`flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
               theme === 'dark'
-                ? 'border-blue-500 bg-blue-950/40 text-blue-400 font-semibold'
+                ? 'border-[#F9C083] bg-[#222325] text-white font-semibold shadow-2xs'
                 : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <Moon className="w-4 h-4" />
+              <Moon className={`w-4 h-4 ${theme === 'dark' ? 'text-[#F9C083]' : ''}`} />
               <span className="text-sm">Dark Mode</span>
             </div>
-            {theme === 'dark' && <Check className="w-4 h-4" />}
+            {theme === 'dark' && <Check className="w-4 h-4 text-[#F9C083]" />}
           </button>
         </div>
       </section>
@@ -101,7 +101,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             id="settings-currency"
             value={currencyCode}
             onChange={(e) => onCurrencyChange(e.target.value)}
-            className="w-full h-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-blue-600 transition-colors cursor-pointer"
+            className="w-full h-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-[#1B3352] dark:focus:border-[#F9C083] transition-colors cursor-pointer"
           >
             {SUPPORTED_CURRENCIES.map((c) => (
               <option key={c.code} value={c.code}>
@@ -133,9 +133,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                 setLoadedToast(scenario.name);
                 setTimeout(() => setLoadedToast(null), 2500);
               }}
-              className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium px-3.5 py-2 rounded-xl transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-[#1B3352]/10 dark:bg-slate-800 hover:bg-[#1B3352]/20 dark:hover:bg-slate-700 text-[#1B3352] dark:text-slate-200 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <Sparkles className="w-3.5 h-3.5 text-[#D68B42] dark:text-[#F9C083]" />
               <span>Load {scenario.name}</span>
             </button>
           ))}

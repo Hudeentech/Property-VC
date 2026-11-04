@@ -75,7 +75,7 @@ export const ConstructionVariableCard: React.FC<ConstructionVariableCardProps> =
             value={item.title}
             onChange={(e) => handleFieldChange('title', e.target.value)}
             placeholder={index === 0 ? 'e.g. Main building' : 'e.g. Warehouse or annex'}
-            className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-600/10 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+            className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
         </div>
 
@@ -95,7 +95,7 @@ export const ConstructionVariableCard: React.FC<ConstructionVariableCardProps> =
             value={item.area === 0 ? '' : item.area}
             onChange={(e) => handleFieldChange('area', e.target.value)}
             placeholder="e.g. 250"
-            className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-600/10 placeholder:text-slate-400 dark:placeholder:text-slate-500 tabular-nums"
+            className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 tabular-nums"
           />
         </div>
 
@@ -119,7 +119,7 @@ export const ConstructionVariableCard: React.FC<ConstructionVariableCardProps> =
               value={item.costPerSqM === 0 ? '' : item.costPerSqM}
               onChange={(e) => handleFieldChange('costPerSqM', e.target.value)}
               placeholder="e.g. 250,000"
-              className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg pl-7 pr-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-600/10 placeholder:text-slate-400 dark:placeholder:text-slate-500 tabular-nums"
+              className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg pl-7 pr-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 tabular-nums"
             />
           </div>
         </div>
@@ -142,7 +142,7 @@ export const ConstructionVariableCard: React.FC<ConstructionVariableCardProps> =
               value={item.depreciationPercent === 0 ? '' : item.depreciationPercent}
               onChange={(e) => handleFieldChange('depreciationPercent', e.target.value)}
               placeholder="e.g. 10"
-              className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg pl-2.5 pr-6 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-600/10 placeholder:text-slate-400 dark:placeholder:text-slate-500 tabular-nums"
+              className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg pl-2.5 pr-6 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 tabular-nums"
             />
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-medium select-none text-xs">
               %
