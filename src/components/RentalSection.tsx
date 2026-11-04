@@ -85,14 +85,14 @@ export const RentalSection: React.FC<RentalSectionProps> = ({
               >
                 {rentalUnits.length > 1 && (
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      Lettable Space #{index + 1}
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                      {unit.title.trim() || 'Lettable Space'}
                     </span>
                     <button
                       type="button"
                       onClick={() => handleRemoveUnit(unit.id)}
                       className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 text-xs font-medium cursor-pointer inline-flex items-center gap-1 transition-colors py-0.5 px-1.5 rounded hover:bg-red-50 dark:hover:bg-red-950/40"
-                      aria-label={`Remove Lettable Space ${index + 1}`}
+                      aria-label={`Remove ${unit.title || `Lettable Space ${index + 1}`}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Remove</span>
@@ -107,14 +107,14 @@ export const RentalSection: React.FC<RentalSectionProps> = ({
                       htmlFor={isFirst ? 'rentalTitle' : `rentalTitle-${unit.id}`}
                       className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1"
                     >
-                      Space Description
+                      Space Name
                     </label>
                     <input
                       id={isFirst ? 'rentalTitle' : `rentalTitle-${unit.id}`}
                       type="text"
                       value={unit.title}
                       onChange={(e) => handleUnitChange(index, 'title', e.target.value)}
-                      placeholder="e.g. Lettable Commercial Space"
+                      placeholder="Name this space (e.g. Ground Floor Shop)"
                       className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#D68B42] focus:ring-2 focus:ring-[#F9C083]/40 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     />
                   </div>
