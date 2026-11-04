@@ -1,4 +1,4 @@
-import { ConstructionVariable, LandData, RentalUnit, ValuationSummary } from '../types/valuation';
+import type { ConstructionVariable, LandData, RentalUnit, ValuationSummary } from '../types/valuation.ts';
 
 export const SUPPORTED_CURRENCIES = [
   { code: 'NGN', symbol: '₦', name: 'Nigerian Naira (₦)', locale: 'en-NG' },

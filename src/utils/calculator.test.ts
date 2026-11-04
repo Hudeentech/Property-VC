@@ -6,7 +6,7 @@ import {
   calculateRentalItem,
   calculateValuationSummary,
   formatCurrency,
-} from './calculator';
+} from './calculator.ts';
 
 test('calculateConstructionItem computes gross, depreciation and final value', () => {
   const item = {
