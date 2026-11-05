@@ -45,14 +45,6 @@ export const EMPTY_DEFAULT_SCENARIO: ValuationScenario = {
       outgoingsPercent: 0,
       period: 'annual',
     },
-    {
-      id: 'rent-init-2',
-      title: '',
-      area: 0,
-      rentRatePerSqM: 0,
-      outgoingsPercent: 0,
-      period: 'annual',
-    },
   ],
 };
 

@@ -412,42 +412,59 @@ export async function exportValuationReportToPdf({
     cursorY += 20;
   };
 
-  // 3. RENTAL VALUATION TABLES (1. Main Building, 2. Additional Component, 3. Land Value)
+  // 3. RENTAL BREAKDOWN TABLES (Simple & Compact like Capital Value Report)
   if (showRental) {
-    const twoCols = [
-      { label: 'Description', widthRatio: 0.6, align: 'left' as const },
-      { label: 'Value', widthRatio: 0.4, align: 'right' as const },
+    const rentalCols = [
+      { label: 'Component', widthRatio: 0.26, align: 'left' as const },
+      { label: 'Area (m²)', widthRatio: 0.14, align: 'right' as const },
+      { label: 'Rate / m²', widthRatio: 0.17, align: 'right' as const },
+      { label: 'Gross', widthRatio: 0.17, align: 'right' as const },
+      { label: 'Outgoings', widthRatio: 0.09, align: 'right' as const },
+      { label: 'Net Rent', widthRatio: 0.17, align: 'right' as const },
     ];
 
-    rentalUnits.forEach((u, i) => {
+    const rentalRows = rentalUnits.map((u, i) => {
       const c = calculateRentalItem(u);
-      const heading = u.title.trim() || (i === 0 ? 'Main Building' : 'Additional Component');
-      const rows = [
-        ['Area', `${c.area.toLocaleString(undefined, { maximumFractionDigits: 4 })} m²`],
-        ['Rental rate per m²', formatCurrency(c.rentRatePerSqM, currencyCode, locale)],
-        ['Gross Rental Value', formatCurrency(c.grossValue, currencyCode, locale)],
-        [
-          `Less: Outgoings @ ${c.outgoingsPercent}%`,
-          formatCurrency(c.outgoingsAmount, currencyCode, locale),
-        ],
+      return [
+        u.title.trim() || (i === 0 ? 'Main Building' : `Component ${i + 1}`),
+        `${c.area.toLocaleString(undefined, { maximumFractionDigits: 4 })} m²`,
+        formatCurrency(c.rentRatePerSqM, currencyCode, locale),
+        formatCurrency(c.grossValue, currencyCode, locale),
+        `${c.outgoingsPercent}%`,
+        formatCurrency(c.netValue, currencyCode, locale),
       ];
+    });
 
-      drawTableSection(`${i + 1}. ${heading}`, twoCols, rows, {
-        cells: ['Net Rental Value', formatCurrency(c.netValue, currencyCode, locale)],
-      });
+    drawTableSection('Rental Components', rentalCols, rentalRows, {
+      cells: [
+        'Net Rental Total',
+        `${summary.totalLettableAreaSqM.toLocaleString(undefined, { maximumFractionDigits: 4 })} m²`,
+        '—',
+        formatCurrency(summary.rentalGrossTotal, currencyCode, locale),
+        `−${formatCurrency(summary.rentalOutgoingsTotal, currencyCode, locale)}`,
+        formatCurrency(summary.rentalNetTotal, currencyCode, locale),
+      ],
     });
 
     if (template === 'rental') {
       const landCalc = calculateLandValue(land);
-      const landHeading = land.title.trim() || 'Land Value';
-      const landRows = [
-        ['Area', `${landCalc.area.toLocaleString(undefined, { maximumFractionDigits: 4 })} m²`],
-        ['Land cost per m²', formatCurrency(landCalc.costPerSqM, currencyCode, locale)],
+      const landCols = [
+        { label: 'Description', widthRatio: 0.4, align: 'left' as const },
+        { label: 'Area (m²)', widthRatio: 0.2, align: 'right' as const },
+        { label: 'Land cost per m²', widthRatio: 0.2, align: 'right' as const },
+        { label: 'Total Land Value', widthRatio: 0.2, align: 'right' as const },
       ];
 
-      drawTableSection(`${rentalUnits.length + 1}. ${landHeading}`, twoCols, landRows, {
-        cells: ['Total Land Value', formatCurrency(landCalc.value, currencyCode, locale)],
-      });
+      const landRows = [
+        [
+          land.title.trim() || 'Land Value',
+          `${landCalc.area.toLocaleString(undefined, { maximumFractionDigits: 4 })} m²`,
+          formatCurrency(landCalc.costPerSqM, currencyCode, locale),
+          formatCurrency(landCalc.value, currencyCode, locale),
+        ],
+      ];
+
+      drawTableSection('Land Value', landCols, landRows);
     }
   }
 

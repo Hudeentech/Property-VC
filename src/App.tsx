@@ -102,10 +102,23 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed.rentalUnits) && parsed.rentalUnits.length > 0) {
-          return parsed.rentalUnits.map((u: RentalUnit) => ({
-            ...u,
-            outgoingsPercent: typeof u.outgoingsPercent === 'number' ? u.outgoingsPercent : 0,
-          }));
+          const normalized = parsed.rentalUnits
+            .map((u: RentalUnit) => ({
+              ...u,
+              outgoingsPercent: typeof u.outgoingsPercent === 'number' ? u.outgoingsPercent : 0,
+            }))
+            .filter(
+              (u: RentalUnit, idx: number) =>
+                !(
+                  idx > 0 &&
+                  u.id.startsWith('rent-init-2') &&
+                  !u.title &&
+                  u.area === 0 &&
+                  u.rentRatePerSqM === 0 &&
+                  u.outgoingsPercent === 0
+                )
+            );
+          if (normalized.length > 0) return normalized;
         }
       }
     } catch {

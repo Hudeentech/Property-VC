@@ -155,7 +155,7 @@ export const RentalSection: React.FC<RentalSectionProps> = ({
                 </div>
 
                 {/* 3-Column Inputs: Area, Rental rate per m², Outgoings @ % */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {/* Area */}
                   <div>
                     <label
@@ -225,58 +225,31 @@ export const RentalSection: React.FC<RentalSectionProps> = ({
                   </div>
                 </div>
 
-                {/* Live Description | Value Breakdown Table */}
-                <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800">
-                      <tr>
-                        <th className="py-2 px-3.5">Description</th>
-                        <th className="py-2 px-3.5 text-right">Value</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70 bg-white dark:bg-slate-900">
-                      <tr>
-                        <td className="py-2 px-3.5 text-slate-600 dark:text-slate-400">Area</td>
-                        <td className="py-2 px-3.5 text-right font-medium text-slate-900 dark:text-white tabular-nums">
-                          {calc.area > 0
-                            ? `${calc.area.toLocaleString(undefined, { maximumFractionDigits: 4 })} m²`
-                            : '0 m²'}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 px-3.5 text-slate-600 dark:text-slate-400">
-                          Rental rate per m²
-                        </td>
-                        <td className="py-2 px-3.5 text-right font-medium text-slate-900 dark:text-white tabular-nums">
-                          {formatCurrency(calc.rentRatePerSqM, currencyCode, locale)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 px-3.5 text-slate-700 dark:text-slate-300 font-medium">
-                          Gross Rental Value
-                        </td>
-                        <td className="py-2 px-3.5 text-right font-semibold text-slate-900 dark:text-white tabular-nums">
-                          {formatCurrency(calc.grossValue, currencyCode, locale)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 px-3.5 text-slate-600 dark:text-slate-400">
-                          Less: Outgoings @ {calc.outgoingsPercent}%
-                        </td>
-                        <td className="py-2 px-3.5 text-right font-medium text-slate-700 dark:text-slate-300 tabular-nums">
-                          {formatCurrency(calc.outgoingsAmount, currencyCode, locale)}
-                        </td>
-                      </tr>
-                      <tr className="bg-[#F9C083]/20 dark:bg-[#F9C083]/10">
-                        <td className="py-2.5 px-3.5 font-bold text-[#1E1E1E] dark:text-white">
-                          Net Rental Value
-                        </td>
-                        <td className="py-2.5 px-3.5 text-right font-bold text-[#1B3352] dark:text-[#F9C083] tabular-nums text-sm">
-                          {formatCurrency(calc.netValue, currencyCode, locale)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                {/* Subtle inline footer calculation */}
+                <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    {calc.grossValue > 0 ? (
+                      <>
+                        Gross: {formatCurrency(calc.grossValue, currencyCode, locale)}
+                        {calc.outgoingsAmount > 0 && (
+                          <>
+                            {' '}· Less {calc.outgoingsPercent}% outgoings (−
+                            {formatCurrency(calc.outgoingsAmount, currencyCode, locale)})
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      'Enter area and rental rate per m²'
+                    )}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">
+                      Net Rental Value:
+                    </span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
+                      {formatCurrency(calc.netValue, currencyCode, locale)}
+                    </span>
+                  </div>
                 </div>
               </div>
             );
@@ -335,7 +308,7 @@ export const RentalSection: React.FC<RentalSectionProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Land Area */}
               <div>
                 <label
@@ -380,42 +353,21 @@ export const RentalSection: React.FC<RentalSectionProps> = ({
               </div>
             </div>
 
-            {/* Land Description | Value Table */}
-            <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800">
-                  <tr>
-                    <th className="py-2 px-3.5">Description</th>
-                    <th className="py-2 px-3.5 text-right">Value</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70 bg-white dark:bg-slate-900">
-                  <tr>
-                    <td className="py-2 px-3.5 text-slate-600 dark:text-slate-400">Area</td>
-                    <td className="py-2 px-3.5 text-right font-medium text-slate-900 dark:text-white tabular-nums">
-                      {landCalc.area > 0
-                        ? `${landCalc.area.toLocaleString(undefined, { maximumFractionDigits: 4 })} m²`
-                        : '0 m²'}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 px-3.5 text-slate-600 dark:text-slate-400">
-                      Land cost per m²
-                    </td>
-                    <td className="py-2 px-3.5 text-right font-medium text-slate-900 dark:text-white tabular-nums">
-                      {formatCurrency(landCalc.costPerSqM, currencyCode, locale)}
-                    </td>
-                  </tr>
-                  <tr className="bg-slate-50/90 dark:bg-slate-800/50">
-                    <td className="py-2.5 px-3.5 font-bold text-[#1E1E1E] dark:text-white">
-                      Total Land Value
-                    </td>
-                    <td className="py-2.5 px-3.5 text-right font-bold text-[#1B3352] dark:text-[#F9C083] tabular-nums text-sm">
-                      {formatCurrency(landCalc.value, currencyCode, locale)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            {/* Quiet Inline Result */}
+            <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="text-slate-500 dark:text-slate-400">
+                {landCalc.area > 0 && landCalc.costPerSqM > 0
+                  ? `${landCalc.area.toLocaleString(undefined, { maximumFractionDigits: 4 })} m² × ${formatCurrency(landCalc.costPerSqM, currencyCode, locale)}/m²`
+                  : 'Site area × land cost per m²'}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">
+                  Total Land Value:
+                </span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white tabular-nums">
+                  {formatCurrency(landCalc.value, currencyCode, locale)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
