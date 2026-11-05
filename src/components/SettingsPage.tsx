@@ -3,6 +3,7 @@ import { ThemeMode } from '../types/valuation';
 import { SUPPORTED_CURRENCIES } from '../utils/calculator';
 import { PRESET_SCENARIOS, ValuationScenario } from '../utils/presets';
 import { Sun, Moon, Trash2, Check, RotateCcw, Sparkles } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface SettingsPageProps {
   theme: ThemeMode;
@@ -36,6 +37,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* Install App (PWA) Section */}
+      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xs">
+        <PWAInstallButton variant="settings" />
+      </section>
+
       {/* Appearance / Theme */}
       <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xs">
         <div className="mb-4">

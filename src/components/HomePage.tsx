@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ActiveTab, ThemeMode } from '../types/valuation';
 import { ArrowUpRight, Settings, Moon } from 'lucide-react';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface HomePageProps {
   onNavigate: (tab: ActiveTab) => void;
@@ -128,15 +129,18 @@ export const HomePage: React.FC<HomePageProps> = ({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => onNavigate('settings')}
-            aria-label="Open Settings"
-            title="Settings & Preferences"
-            className="text-white/90 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors cursor-pointer mt-1"
-          >
-            <Settings className="w-6 h-6 sm:w-7 sm:h-7" />
-          </button>
+          <div className="flex items-center gap-2 mt-1">
+            <PWAInstallButton variant="home-header" />
+            <button
+              type="button"
+              onClick={() => onNavigate('settings')}
+              aria-label="Open Settings"
+              title="Settings & Preferences"
+              className="text-white/90 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <Settings className="w-6 h-6 sm:w-7 sm:h-7" />
+            </button>
+          </div>
         </header>
 
         {/* =========================================================

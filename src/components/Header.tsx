@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActiveTab } from '../types/valuation';
 import { BrandLogo } from './HomePage';
+import { PWAInstallButton } from './PWAInstallButton';
 import {
   Home,
   KeyRound,
@@ -147,6 +148,8 @@ export const Header: React.FC<HeaderProps> = ({
                   <span>Settings</span>
                 </button>
               </nav>
+
+              <PWAInstallButton variant="app-header" />
 
               {/* Quick Action Buttons when on Calculator pages */}
               {isCalculatorPage && (

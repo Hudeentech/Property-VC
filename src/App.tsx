@@ -19,6 +19,7 @@ import { SummarySection } from './components/SummarySection';
 import { HistoryPage } from './components/HistoryPage';
 import { SettingsPage } from './components/SettingsPage';
 import { ReportModal } from './components/ReportModal';
+import { OfflineIndicator } from './components/PWAInstallButton';
 
 const STORAGE_KEY = 'prop_valuation_data_v2';
 const HISTORY_KEY = 'prop_valuation_history_v1';
@@ -443,6 +444,7 @@ export default function App() {
           />
         </main>
       )}
+      <OfflineIndicator />
     </div>
   );
 }
