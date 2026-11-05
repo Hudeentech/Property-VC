@@ -3,6 +3,7 @@ import {
   ActiveTab,
   ConstructionVariable,
   LandData,
+  MortgageData,
   RentalUnit,
   ThemeMode,
   ValuationHistoryItem,
@@ -13,6 +14,7 @@ import { HomePage } from './components/HomePage';
 import { Header } from './components/Header';
 import { CapitalSection } from './components/CapitalSection';
 import { RentalSection } from './components/RentalSection';
+import { MortgageSection } from './components/MortgageSection';
 import { SummarySection } from './components/SummarySection';
 import { HistoryPage } from './components/HistoryPage';
 import { SettingsPage } from './components/SettingsPage';
@@ -108,6 +110,25 @@ export default function App() {
     return defaultScenario.rentalUnits;
   });
 
+  const [mortgage, setMortgage] = useState<MortgageData>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.mortgage) return parsed.mortgage;
+      }
+    } catch {
+      // fallback
+    }
+    return {
+      propertyTitle: '',
+      propertyPrice: 0,
+      downPaymentPercent: 0,
+      interestRatePercent: 0,
+      loanTermYears: 0,
+    };
+  });
+
   const [history, setHistory] = useState<ValuationHistoryItem[]>(() => {
     try {
       const saved = localStorage.getItem(HISTORY_KEY);
@@ -136,12 +157,13 @@ export default function App() {
           constructionVariables,
           land,
           rentalUnits,
+          mortgage,
         })
       );
     } catch {
       // ignore
     }
-  }, [currencyCode, constructionVariables, land, rentalUnits]);
+  }, [currencyCode, constructionVariables, land, rentalUnits, mortgage]);
 
   // Sync history to local storage
   useEffect(() => {
@@ -189,7 +211,17 @@ export default function App() {
   };
 
   const handleReset = () => {
-    handleSelectScenario(defaultScenario);
+    if (activeTab === 'mortgage') {
+      setMortgage({
+        propertyTitle: '',
+        propertyPrice: 0,
+        downPaymentPercent: 0,
+        interestRatePercent: 0,
+        loanTermYears: 0,
+      });
+    } else {
+      handleSelectScenario(defaultScenario);
+    }
   };
 
   const handleToggleTheme = () => {
@@ -198,7 +230,10 @@ export default function App() {
 
   const handleSaveToHistory = () => {
     const isRental = activeTab === 'rental';
-    const firstTitle = isRental
+    const isMortgage = activeTab === 'mortgage';
+    const firstTitle = isMortgage
+      ? mortgage.propertyTitle.trim() || `Mortgage Valuation #${history.length + 1}`
+      : isRental
       ? rentalUnits.find((r) => r.title.trim() !== '')?.title ||
         `Rental Valuation #${history.length + 1}`
       : constructionVariables.find((v) => v.title.trim() !== '')?.title ||
@@ -208,7 +243,7 @@ export default function App() {
     const newItem: ValuationHistoryItem = {
       id: `hist-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       savedAt: new Date().toISOString(),
-      type: isRental ? 'rental' : 'capital',
+      type: isMortgage ? 'mortgage' : isRental ? 'rental' : 'capital',
       label: firstTitle,
       currencyCode,
       constructionVariables: constructionVariables.map((v) => ({ ...v })),
@@ -227,7 +262,9 @@ export default function App() {
     setConstructionVariables(item.constructionVariables.map((v) => ({ ...v })));
     setLand({ ...item.land });
     setRentalUnits(item.rentalUnits.map((r) => ({ ...r })));
-    setActiveTab(item.type === 'capital' ? 'capital' : 'rental');
+    setActiveTab(
+      item.type === 'capital' ? 'capital' : item.type === 'mortgage' ? 'mortgage' : 'rental'
+    );
   };
 
   const handleViewHistoryReport = (item: ValuationHistoryItem) => {
@@ -345,6 +382,18 @@ export default function App() {
                 locale={currentCurrency.locale}
               />
             </>
+          )}
+
+          {/* Dedicated Mortgage Value Calculator Page */}
+          {activeTab === 'mortgage' && (
+            <MortgageSection
+              mortgage={mortgage}
+              currencySymbol={currentCurrency.symbol}
+              currencyCode={currencyCode}
+              locale={currentCurrency.locale}
+              onUpdateMortgage={setMortgage}
+              onSwitchToRental={() => setActiveTab('rental')}
+            />
           )}
 
           {/* History Page */}

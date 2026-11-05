@@ -5,6 +5,7 @@ import {
   Home,
   KeyRound,
   Building2,
+  Landmark,
   History,
   Settings,
   Printer,
@@ -29,7 +30,8 @@ export const Header: React.FC<HeaderProps> = ({
   onReset,
   onOpenReport,
 }) => {
-  const isCalculatorPage = activeTab === 'rental' || activeTab === 'capital';
+  const isCalculatorPage =
+    activeTab === 'rental' || activeTab === 'capital' || activeTab === 'mortgage';
 
   return (
     <>
@@ -54,6 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <p className="text-slate-500 dark:text-slate-400 text-xs">
                     {activeTab === 'rental' && 'Rental Value Calculator'}
                     {activeTab === 'capital' && 'Capital Value Calculator'}
+                    {activeTab === 'mortgage' && 'Mortgage Value Calculator'}
                     {activeTab === 'history' && 'Saved Valuation Reports'}
                     {activeTab === 'settings' && 'Preferences & Theme'}
                   </p>
@@ -79,27 +82,40 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   type="button"
                   onClick={() => onSelectTab('rental')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     activeTab === 'rental'
                       ? 'bg-[#F9C083] text-[#1E1E1E] shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <KeyRound className="w-3.5 h-3.5" />
-                  <span>Rental Value</span>
+                  <span>Rental</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => onSelectTab('capital')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     activeTab === 'capital'
                       ? 'bg-[#1B3352] text-white shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <Building2 className="w-3.5 h-3.5" />
-                  <span>Capital Value</span>
+                  <span>Capital</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onSelectTab('mortgage')}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    activeTab === 'mortgage'
+                      ? 'bg-[#E4CEFA] text-[#222325] shadow-2xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Landmark className="w-3.5 h-3.5" />
+                  <span>Mortgage</span>
                 </button>
 
                 <button
@@ -132,7 +148,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </nav>
 
-              {/* Quick Action Buttons when on either Calculator page */}
+              {/* Quick Action Buttons when on Calculator pages */}
               {isCalculatorPage && (
                 <div className="flex items-center gap-1.5">
                   <button
@@ -145,15 +161,17 @@ export const Header: React.FC<HeaderProps> = ({
                     <span>Save</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={onOpenReport}
-                    className="h-9 inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium px-3 rounded-xl transition-colors cursor-pointer"
-                    aria-label="Generate Valuation Report"
-                  >
-                    <Printer className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                    <span className="hidden md:inline">Report</span>
-                  </button>
+                  {activeTab !== 'mortgage' && (
+                    <button
+                      type="button"
+                      onClick={onOpenReport}
+                      className="h-9 inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium px-3 rounded-xl transition-colors cursor-pointer"
+                      aria-label="Generate Valuation Report"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                      <span className="hidden md:inline">Report</span>
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -172,13 +190,13 @@ export const Header: React.FC<HeaderProps> = ({
         </header>
       )}
 
-      {/* Mobile Native Bottom Navigation Bar (Displayed on inner calculator, history, and settings pages) */}
+      {/* Mobile Native Bottom Navigation Bar */}
       {activeTab !== 'home' && (
         <nav
           aria-label="Mobile Bottom Navigation"
-          className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#181B22]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-2 py-1.5 no-print"
+          className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#181B22]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-1.5 py-1.5 no-print"
         >
-          <div className="grid grid-cols-5 gap-0.5 max-w-md mx-auto">
+          <div className="grid grid-cols-6 gap-0.5 max-w-md mx-auto">
             <button
               type="button"
               onClick={() => onSelectTab('home')}
@@ -216,6 +234,19 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               type="button"
+              onClick={() => onSelectTab('mortgage')}
+              className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer ${
+                activeTab === 'mortgage'
+                  ? 'text-[#9B51E0] dark:text-[#E4CEFA] font-semibold'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              <Landmark className="w-4 h-4 mb-0.5" />
+              <span>Mortgage</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => onSelectTab('history')}
               className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-medium transition-colors cursor-pointer ${
                 activeTab === 'history'
@@ -224,7 +255,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <History className="w-4 h-4 mb-0.5" />
-              <span>History{historyCount > 0 ? ` (${historyCount})` : ''}</span>
+              <span>History</span>
             </button>
 
             <button

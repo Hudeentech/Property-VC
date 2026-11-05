@@ -20,6 +20,14 @@ export interface RentalUnit {
   period?: 'annual' | 'monthly';
 }
 
+export interface MortgageData {
+  propertyTitle: string;
+  propertyPrice: number;
+  downPaymentPercent: number;
+  interestRatePercent: number;
+  loanTermYears: number;
+}
+
 export interface CurrencyConfig {
   code: string;
   symbol: string;
@@ -42,12 +50,12 @@ export interface ValuationSummary {
 
 export type ThemeMode = 'light' | 'dark';
 
-export type ActiveTab = 'home' | 'rental' | 'capital' | 'history' | 'settings';
+export type ActiveTab = 'home' | 'rental' | 'capital' | 'mortgage' | 'history' | 'settings';
 
 export interface ValuationHistoryItem {
   id: string;
   savedAt: string;
-  type: 'rental' | 'capital' | 'full';
+  type: 'rental' | 'capital' | 'mortgage' | 'full';
   label: string;
   currencyCode: string;
   constructionVariables: ConstructionVariable[];
