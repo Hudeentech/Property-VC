@@ -41,28 +41,34 @@ export const ConstructionVariableCard: React.FC<ConstructionVariableCardProps> =
 
   return (
     <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-900 transition-colors hover:border-slate-300 dark:hover:border-slate-700">
-      {/* Editable Component Name Header (replaces static "Component #1") */}
-      <div className="flex items-center justify-between gap-3 mb-3.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
-        <div className="relative flex-1 flex items-center">
-          <PencilLine
-            aria-hidden="true"
-            className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 pointer-events-none"
-          />
-          <label htmlFor={`v-title-${item.id}`} className="sr-only">
-            Component Name
-          </label>
-          <input
-            id={`v-title-${item.id}`}
-            type="text"
-            value={item.title}
-            onChange={(e) => handleFieldChange('title', e.target.value)}
-            placeholder={
-              index === 0
-                ? 'Name this component (e.g. Main Building)'
-                : `Name this component (e.g. Annex, BQ, Fence)`
-            }
-            className="w-full h-9 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-[#1B3352] dark:focus:border-[#F9C083] rounded-lg pl-8 pr-3 text-sm font-semibold text-slate-900 dark:text-white bg-slate-50/80 dark:bg-slate-800/60 focus:bg-white dark:focus:bg-slate-800 outline-none transition focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 placeholder:font-normal placeholder:text-slate-400 dark:placeholder:text-slate-500"
-          />
+      {/* Editable Component Name Header: e.g. "1. Main Building" */}
+      <div className="flex items-center justify-between gap-3 mb-4 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-2 flex-1">
+          <span className="text-sm font-bold text-[#1B3352] dark:text-[#F9C083] shrink-0">
+            {index + 1}.
+          </span>
+          <div className="relative flex-1 flex items-center">
+            <PencilLine
+              aria-hidden="true"
+              className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 pointer-events-none"
+            />
+            <label htmlFor={`v-title-${item.id}`} className="sr-only">
+              Component Name
+            </label>
+            <input
+              id={`v-title-${item.id}`}
+              type="text"
+              value={item.title}
+              onChange={(e) => handleFieldChange('title', e.target.value)}
+              aria-label={index === 0 ? 'Main Building' : 'Additional Component'}
+              className="w-full h-9 border border-slate-200/80 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 focus:border-[#1B3352] dark:focus:border-[#F9C083] rounded-lg pl-8 pr-3 text-sm font-semibold text-slate-900 dark:text-white bg-slate-50/80 dark:bg-slate-800/60 focus:bg-white dark:focus:bg-slate-800 outline-none transition focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20"
+            />
+            {!item.title && (
+              <span className="pointer-events-none absolute left-8 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                {index === 0 ? 'Main Building' : 'Additional Component'}
+              </span>
+            )}
+          </div>
         </div>
 
         {canRemove && (
@@ -95,8 +101,7 @@ export const ConstructionVariableCard: React.FC<ConstructionVariableCardProps> =
             step="any"
             value={item.area === 0 ? '' : item.area}
             onChange={(e) => handleFieldChange('area', e.target.value)}
-            placeholder="e.g. 250"
-            className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 tabular-nums"
+            className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 tabular-nums"
           />
         </div>
 
@@ -119,8 +124,7 @@ export const ConstructionVariableCard: React.FC<ConstructionVariableCardProps> =
               step="any"
               value={item.costPerSqM === 0 ? '' : item.costPerSqM}
               onChange={(e) => handleFieldChange('costPerSqM', e.target.value)}
-              placeholder="e.g. 250,000"
-              className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg pl-7 pr-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 tabular-nums"
+              className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg pl-7 pr-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 tabular-nums"
             />
           </div>
         </div>
@@ -142,8 +146,7 @@ export const ConstructionVariableCard: React.FC<ConstructionVariableCardProps> =
               step="any"
               value={item.depreciationPercent === 0 ? '' : item.depreciationPercent}
               onChange={(e) => handleFieldChange('depreciationPercent', e.target.value)}
-              placeholder="e.g. 10"
-              className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg pl-3 pr-7 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 tabular-nums"
+              className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg pl-3 pr-7 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 tabular-nums"
             />
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-medium select-none text-xs">
               %

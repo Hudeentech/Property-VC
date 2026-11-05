@@ -164,17 +164,15 @@ export const Header: React.FC<HeaderProps> = ({
                     <span>Save</span>
                   </button>
 
-                  {activeTab !== 'mortgage' && (
-                    <button
-                      type="button"
-                      onClick={onOpenReport}
-                      className="h-9 inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium px-3 rounded-xl transition-colors cursor-pointer"
-                      aria-label="Generate Valuation Report"
-                    >
-                      <Printer className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                      <span className="hidden md:inline">Report</span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={onOpenReport}
+                    className="h-9 inline-flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-medium px-3 rounded-xl transition-colors cursor-pointer"
+                    aria-label="Generate Valuation Report"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                    <span className="hidden md:inline">Report</span>
+                  </button>
 
                   <button
                     type="button"

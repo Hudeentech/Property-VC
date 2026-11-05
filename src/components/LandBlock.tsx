@@ -1,6 +1,7 @@
 import React from 'react';
 import { LandData } from '../types/valuation';
 import { calculateLandValue, formatCurrency } from '../utils/calculator';
+import { PencilLine } from 'lucide-react';
 
 interface LandBlockProps {
   land: LandData;
@@ -30,32 +31,35 @@ export const LandBlock: React.FC<LandBlockProps> = ({
 
   return (
     <div className="border-t border-slate-200 dark:border-slate-800 mt-5 pt-5">
-      <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">
-        Land Value
-      </div>
-
-      <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-900">
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-          {/* Land Title */}
-          <div className="sm:col-span-5">
-            <label
-              htmlFor="landTitle"
-              className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1"
-            >
-              Land Description
+      <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 bg-white dark:bg-slate-900">
+        <div className="flex items-center gap-2 mb-4 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+          <div className="relative flex-1 flex items-center">
+            <PencilLine
+              aria-hidden="true"
+              className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 pointer-events-none"
+            />
+            <label htmlFor="landTitle" className="sr-only">
+              Land Value Title
             </label>
             <input
               id="landTitle"
               type="text"
               value={land.title}
               onChange={(e) => handleFieldChange('title', e.target.value)}
-              placeholder="e.g. Main property land"
-              className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              aria-label="Land Value"
+              className="w-full h-9 border border-slate-200/80 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 focus:border-[#1B3352] dark:focus:border-[#F9C083] rounded-lg pl-8 pr-3 text-sm font-semibold text-slate-900 dark:text-white bg-slate-50/80 dark:bg-slate-800/60 focus:bg-white dark:focus:bg-slate-800 outline-none transition focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20"
             />
+            {!land.title && (
+              <span className="pointer-events-none absolute left-8 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Land Value
+              </span>
+            )}
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Land Area */}
-          <div className="sm:col-span-3">
+          <div>
             <label
               htmlFor="landArea"
               className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1"
@@ -69,18 +73,17 @@ export const LandBlock: React.FC<LandBlockProps> = ({
               step="any"
               value={land.area === 0 ? '' : land.area}
               onChange={(e) => handleFieldChange('area', e.target.value)}
-              placeholder="e.g. 500"
-              className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 tabular-nums"
+              className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg px-3 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 tabular-nums"
             />
           </div>
 
           {/* Cost of Land per m² */}
-          <div className="sm:col-span-4">
+          <div>
             <label
               htmlFor="landCost"
               className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1"
             >
-              Cost of Land / m²
+              Land cost per m²
             </label>
             <div className="relative">
               <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-medium select-none text-xs">
@@ -93,8 +96,7 @@ export const LandBlock: React.FC<LandBlockProps> = ({
                 step="any"
                 value={land.costPerSqM === 0 ? '' : land.costPerSqM}
                 onChange={(e) => handleFieldChange('costPerSqM', e.target.value)}
-                placeholder="e.g. 50,000"
-                className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg pl-7 pr-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 tabular-nums"
+                className="w-full h-10 sm:h-9 border border-slate-200 dark:border-slate-700 rounded-lg pl-7 pr-2.5 text-sm text-slate-900 dark:text-white bg-white dark:bg-slate-800/70 outline-none transition focus:border-[#1B3352] dark:focus:border-[#F9C083] focus:ring-2 focus:ring-[#1B3352]/15 dark:focus:ring-[#F9C083]/20 tabular-nums"
               />
             </div>
           </div>

@@ -74,7 +74,18 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed.constructionVariables) && parsed.constructionVariables.length > 0) {
-          return parsed.constructionVariables;
+          const filtered = parsed.constructionVariables.filter(
+            (v: ConstructionVariable, idx: number) =>
+              !(
+                idx > 0 &&
+                v.id.startsWith('var-init-2') &&
+                !v.title &&
+                v.area === 0 &&
+                v.costPerSqM === 0 &&
+                v.depreciationPercent === 0
+              )
+          );
+          if (filtered.length > 0) return filtered;
         }
       }
     } catch {
@@ -127,23 +138,31 @@ export default function App() {
     return defaultScenario.rentalUnits;
   });
 
-  const [mortgage, setMortgage] = useState<MortgageData>(() => {
+  const [mortgageUnits, setMortgageUnits] = useState<MortgageData[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.mortgage) return parsed.mortgage;
+        if (Array.isArray(parsed.mortgageUnits) && parsed.mortgageUnits.length > 0) {
+          return parsed.mortgageUnits;
+        }
+        if (parsed.mortgage && typeof parsed.mortgage === 'object') {
+          return [{ id: 'mort-init-1', ...parsed.mortgage }];
+        }
       }
     } catch {
       // fallback
     }
-    return {
-      propertyTitle: '',
-      propertyPrice: 0,
-      downPaymentPercent: 0,
-      interestRatePercent: 0,
-      loanTermYears: 0,
-    };
+    return [
+      {
+        id: 'mort-init-1',
+        propertyTitle: '',
+        propertyPrice: 0,
+        downPaymentPercent: 0,
+        interestRatePercent: 0,
+        loanTermYears: 0,
+      },
+    ];
   });
 
   const [history, setHistory] = useState<ValuationHistoryItem[]>(() => {
@@ -174,13 +193,13 @@ export default function App() {
           constructionVariables,
           land,
           rentalUnits,
-          mortgage,
+          mortgageUnits,
         })
       );
     } catch {
       // ignore
     }
-  }, [currencyCode, constructionVariables, land, rentalUnits, mortgage]);
+  }, [currencyCode, constructionVariables, land, rentalUnits, mortgageUnits]);
 
   // Sync history to local storage
   useEffect(() => {
@@ -219,6 +238,18 @@ export default function App() {
     setRentalUnits((prev) => [...prev, newUnit]);
   };
 
+  const handleAddMortgageUnit = () => {
+    const newUnit: MortgageData = {
+      id: `mort-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      propertyTitle: '',
+      propertyPrice: 0,
+      downPaymentPercent: 0,
+      interestRatePercent: 0,
+      loanTermYears: 0,
+    };
+    setMortgageUnits((prev) => [...prev, newUnit]);
+  };
+
   const handleSelectScenario = (scenario: ValuationScenario) => {
     setCurrencyCode(scenario.currency);
     setConstructionVariables(
@@ -230,13 +261,16 @@ export default function App() {
 
   const handleReset = () => {
     if (activeTab === 'mortgage') {
-      setMortgage({
-        propertyTitle: '',
-        propertyPrice: 0,
-        downPaymentPercent: 0,
-        interestRatePercent: 0,
-        loanTermYears: 0,
-      });
+      setMortgageUnits([
+        {
+          id: 'mort-init-1',
+          propertyTitle: '',
+          propertyPrice: 0,
+          downPaymentPercent: 0,
+          interestRatePercent: 0,
+          loanTermYears: 0,
+        },
+      ]);
     } else {
       handleSelectScenario(defaultScenario);
     }
@@ -250,7 +284,8 @@ export default function App() {
     const isRental = activeTab === 'rental';
     const isMortgage = activeTab === 'mortgage';
     const firstTitle = isMortgage
-      ? mortgage.propertyTitle.trim() || `Mortgage Valuation #${history.length + 1}`
+      ? mortgageUnits.find((m) => m.propertyTitle.trim() !== '')?.propertyTitle ||
+        `Mortgage Valuation #${history.length + 1}`
       : isRental
       ? rentalUnits.find((r) => r.title.trim() !== '')?.title ||
         `Rental Valuation #${history.length + 1}`
@@ -421,11 +456,12 @@ export default function App() {
           {/* Dedicated Mortgage Value Calculator Page */}
           {activeTab === 'mortgage' && (
             <MortgageSection
-              mortgage={mortgage}
+              mortgageUnits={mortgageUnits}
               currencySymbol={currentCurrency.symbol}
               currencyCode={currencyCode}
               locale={currentCurrency.locale}
-              onUpdateMortgage={setMortgage}
+              onUpdateMortgageUnits={setMortgageUnits}
+              onAddMortgageUnit={handleAddMortgageUnit}
               onSwitchToRental={() => setActiveTab('rental')}
             />
           )}

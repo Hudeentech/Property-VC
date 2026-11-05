@@ -22,6 +22,7 @@ export interface RentalUnit {
 }
 
 export interface MortgageData {
+  id?: string;
   propertyTitle: string;
   propertyPrice: number;
   downPaymentPercent: number;

@@ -23,13 +23,6 @@ export const EMPTY_DEFAULT_SCENARIO: ValuationScenario = {
       costPerSqM: 0,
       depreciationPercent: 0,
     },
-    {
-      id: 'var-init-2',
-      title: '',
-      area: 0,
-      costPerSqM: 0,
-      depreciationPercent: 0,
-    },
   ],
   land: {
     title: '',
