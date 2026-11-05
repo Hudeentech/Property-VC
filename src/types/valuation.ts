@@ -17,6 +17,7 @@ export interface RentalUnit {
   title: string;
   area: number;
   rentRatePerSqM: number;
+  outgoingsPercent: number;
   period?: 'annual' | 'monthly';
 }
 
@@ -41,10 +42,14 @@ export interface ValuationSummary {
   constructionNetTotal: number;
   landValueTotal: number;
   totalCapitalValue: number;
+  rentalGrossTotal: number;
+  rentalOutgoingsTotal: number;
+  rentalNetTotal: number;
   totalAnnualRentalValue: number;
   totalMonthlyRentalValue: number;
   grossRentalYieldPercent: number;
   totalBuiltAreaSqM: number;
+  totalLettableAreaSqM: number;
   averageCapitalPerSqM: number;
 }
 

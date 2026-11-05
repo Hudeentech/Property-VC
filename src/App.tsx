@@ -102,7 +102,10 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed.rentalUnits) && parsed.rentalUnits.length > 0) {
-          return parsed.rentalUnits;
+          return parsed.rentalUnits.map((u: RentalUnit) => ({
+            ...u,
+            outgoingsPercent: typeof u.outgoingsPercent === 'number' ? u.outgoingsPercent : 0,
+          }));
         }
       }
     } catch {
@@ -197,6 +200,7 @@ export default function App() {
       title: '',
       area: 0,
       rentRatePerSqM: 0,
+      outgoingsPercent: 0,
       period: 'annual',
     };
     setRentalUnits((prev) => [...prev, newUnit]);
@@ -313,8 +317,14 @@ export default function App() {
           />
         </>
       ) : (
-        <main className="max-w-3xl mx-auto px-3.5 sm:px-6 pt-5 sm:pt-9 pb-24 sm:pb-12">
-          {/* Top App Bar & Navigation */}
+        <main
+          className={`max-w-3xl md:max-w-6xl w-full mx-auto px-3.5 sm:px-6 pt-0 pb-24 md:pb-6 ${
+            activeTab === 'rental' || activeTab === 'capital' || activeTab === 'mortgage'
+              ? 'md:h-screen md:overflow-hidden md:flex md:flex-col'
+              : ''
+          }`}
+        >
+          {/* Top App Bar & Navigation (Fixed at top on desktop) */}
           <Header
             activeTab={activeTab}
             historyCount={history.length}
@@ -328,7 +338,7 @@ export default function App() {
           {saveFeedback && (
             <div
               role="status"
-              className="mb-4 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-xs font-medium flex items-center justify-between"
+              className="mb-4 md:shrink-0 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-xs font-medium flex items-center justify-between"
             >
               <span>{saveFeedback}</span>
               <button
@@ -341,48 +351,58 @@ export default function App() {
             </div>
           )}
 
-          {/* Dedicated Rental Value Calculator Page (Default Calculator) */}
+          {/* Dedicated Rental Value Calculator Page (2-Way Layout on Desktop: Left Scrollable Calculator, Right Fixed Summary) */}
           {activeTab === 'rental' && (
-            <>
-              <RentalSection
-                rentalUnits={rentalUnits}
-                currencySymbol={currentCurrency.symbol}
-                currencyCode={currencyCode}
-                locale={currentCurrency.locale}
-                onUpdateRentalUnits={setRentalUnits}
-                onAddRentalUnit={handleAddRentalUnit}
-                onSwitchToCapital={() => setActiveTab('capital')}
-              />
-              <SummarySection
-                mode="rental"
-                summary={summary}
-                currencyCode={currencyCode}
-                locale={currentCurrency.locale}
-              />
-            </>
+            <div className="md:flex-1 md:min-h-0 grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6 items-start md:items-stretch">
+              <div className="md:col-span-7 lg:col-span-8 md:h-full md:overflow-y-auto md:pr-1 pb-4">
+                <RentalSection
+                  rentalUnits={rentalUnits}
+                  land={land}
+                  currencySymbol={currentCurrency.symbol}
+                  currencyCode={currencyCode}
+                  locale={currentCurrency.locale}
+                  onUpdateRentalUnits={setRentalUnits}
+                  onUpdateLand={setLand}
+                  onAddRentalUnit={handleAddRentalUnit}
+                  onSwitchToCapital={() => setActiveTab('capital')}
+                />
+              </div>
+              <div className="md:col-span-5 lg:col-span-4 md:h-full md:overflow-y-auto">
+                <SummarySection
+                  mode="rental"
+                  summary={summary}
+                  currencyCode={currencyCode}
+                  locale={currentCurrency.locale}
+                />
+              </div>
+            </div>
           )}
 
-          {/* Dedicated Capital Value Calculator Page */}
+          {/* Dedicated Capital Value Calculator Page (2-Way Layout on Desktop: Left Scrollable Calculator, Right Fixed Summary) */}
           {activeTab === 'capital' && (
-            <>
-              <CapitalSection
-                constructionVariables={constructionVariables}
-                land={land}
-                currencySymbol={currentCurrency.symbol}
-                currencyCode={currencyCode}
-                locale={currentCurrency.locale}
-                onUpdateConstruction={setConstructionVariables}
-                onUpdateLand={setLand}
-                onAddVariable={handleAddVariable}
-                onSwitchToRental={() => setActiveTab('rental')}
-              />
-              <SummarySection
-                mode="capital"
-                summary={summary}
-                currencyCode={currencyCode}
-                locale={currentCurrency.locale}
-              />
-            </>
+            <div className="md:flex-1 md:min-h-0 grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6 items-start md:items-stretch">
+              <div className="md:col-span-7 lg:col-span-8 md:h-full md:overflow-y-auto md:pr-1 pb-4">
+                <CapitalSection
+                  constructionVariables={constructionVariables}
+                  land={land}
+                  currencySymbol={currentCurrency.symbol}
+                  currencyCode={currencyCode}
+                  locale={currentCurrency.locale}
+                  onUpdateConstruction={setConstructionVariables}
+                  onUpdateLand={setLand}
+                  onAddVariable={handleAddVariable}
+                  onSwitchToRental={() => setActiveTab('rental')}
+                />
+              </div>
+              <div className="md:col-span-5 lg:col-span-4 md:h-full md:overflow-y-auto">
+                <SummarySection
+                  mode="capital"
+                  summary={summary}
+                  currencyCode={currencyCode}
+                  locale={currentCurrency.locale}
+                />
+              </div>
+            </div>
           )}
 
           {/* Dedicated Mortgage Value Calculator Page */}

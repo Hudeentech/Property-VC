@@ -70,8 +70,9 @@ export const MortgageSection: React.FC<MortgageSectionProps> = ({
   };
 
   return (
-    <div className="space-y-5">
-      {/* Brand Lavender Banner Header for Mortgage Value */}
+    <div className="md:flex-1 md:min-h-0 grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6 items-start md:items-stretch">
+      <div className="md:col-span-7 lg:col-span-8 md:h-full md:overflow-y-auto md:pr-1 pb-4 space-y-5">
+        {/* Brand Lavender Banner Header for Mortgage Value */}
       <div className="relative overflow-hidden rounded-2xl bg-[#E4CEFA] text-[#222325] p-5 sm:p-6 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div
           aria-hidden="true"
@@ -252,20 +253,22 @@ export const MortgageSection: React.FC<MortgageSectionProps> = ({
           </div>
         )}
       </section>
+      </div>
 
-      {/* Mortgage Valuation Summary Cards */}
-      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xs">
-        <div className="flex flex-wrap items-baseline justify-between gap-2 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
-            Mortgage Repayment Summary
-          </h2>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            {calc.totalMonths > 0 ? `${calc.totalMonths} monthly installments` : 'Updates automatically'}
-          </span>
-        </div>
+      {/* Mortgage Valuation Summary Cards (Right column on desktop) */}
+      <div className="md:col-span-5 lg:col-span-4 md:h-full md:overflow-y-auto">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xs">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              Mortgage Repayment Summary
+            </h2>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {calc.totalMonths > 0 ? `${calc.totalMonths} monthly installments` : 'Updates automatically'}
+            </span>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
-          <div className="p-3.5 rounded-xl bg-[#E4CEFA]/35 dark:bg-[#E4CEFA]/15 border border-[#C388F8]/50">
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-1 gap-3">
+          <div className="p-4 rounded-xl bg-[#E4CEFA]/35 dark:bg-[#E4CEFA]/15 border border-[#C388F8]/50">
             <span className="block text-xs font-medium text-slate-700 dark:text-[#E4CEFA] mb-1">
               Monthly Repayment
             </span>
@@ -300,8 +303,9 @@ export const MortgageSection: React.FC<MortgageSectionProps> = ({
               Loan principal + total interest
             </span>
           </div>
-        </div>
-      </section>
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

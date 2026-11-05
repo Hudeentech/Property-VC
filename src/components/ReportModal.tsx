@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ConstructionVariable, LandData, RentalUnit, ValuationSummary } from '../types/valuation';
-import { calculateConstructionItem, calculateRentalItem, formatCurrency } from '../utils/calculator';
+import {
+  calculateConstructionItem,
+  calculateLandValue,
+  calculateRentalItem,
+  formatCurrency,
+} from '../utils/calculator';
 import { exportValuationReportToPdf } from '../utils/pdfExport';
 import { Download, Printer, X, KeyRound, Building2, Layers } from 'lucide-react';
 
@@ -71,13 +76,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     day: 'numeric',
   });
 
-  const totalLettableArea = rentalUnits.reduce(
-    (sum, u) => sum + (Number(u.area) > 0 ? Number(u.area) : 0),
-    0
-  );
-  const avgRentPerSqM =
-    totalLettableArea > 0 ? summary.totalAnnualRentalValue / totalLettableArea : 0;
-
+  const landCalc = calculateLandValue(land);
   const showCapital = template === 'capital' || template === 'combined';
   const showRental = template === 'rental' || template === 'combined';
 
@@ -193,17 +192,17 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                     id="report-modal-title"
                     className="text-xl sm:text-3xl font-bold tracking-tight text-[#1E1E1E]"
                   >
-                    {reportTitle || 'Rental Value'}
+                    {reportTitle || 'Rental Valuation'}
                   </h1>
                   <p className="text-xs text-[#2C2620]/80 mt-0.5">{today}</p>
                 </div>
 
                 <div className="pt-2 sm:pt-0 border-t border-[#D68B42]/25 sm:border-0 text-left sm:text-right">
                   <span className="text-[11px] sm:text-xs font-medium text-[#2C2620]/80 block">
-                    Annual Rental Value
+                    Net Rental Value
                   </span>
                   <strong className="text-lg sm:text-2xl font-bold tracking-tight text-[#1E1E1E] tabular-nums">
-                    {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
+                    {formatCurrency(summary.rentalNetTotal, currencyCode, locale)}
                   </strong>
                 </div>
               </div>
@@ -238,33 +237,28 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             </div>
           )}
 
-          {/* Brand Bento Summary Cards (Compact 2-col/stack on mobile, 3-col on desktop) */}
+          {/* Brand Bento Summary Cards */}
           {template === 'rental' && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3 mb-4 sm:mb-5">
               <div className="col-span-2 sm:col-span-1 rounded-2xl bg-[#F9C083] text-[#1E1E1E] p-3.5 sm:p-4">
-                <span className="text-xs font-medium text-[#2C2620] block">Annual Rent</span>
+                <span className="text-xs font-medium text-[#2C2620] block">Net Rental Value</span>
                 <span className="text-base sm:text-xl font-bold tracking-tight text-[#1E1E1E] block mt-0.5 sm:mt-1 tabular-nums break-words">
-                  {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
+                  {formatCurrency(summary.rentalNetTotal, currencyCode, locale)}
                 </span>
               </div>
 
               <div className="rounded-2xl bg-[#1B3352] text-white p-3.5 sm:p-4">
-                <span className="text-xs font-medium text-[#F9C083] block">Monthly Rent</span>
+                <span className="text-xs font-medium text-[#F9C083] block">Gross Rental Value</span>
                 <span className="text-sm sm:text-xl font-bold tracking-tight text-white block mt-0.5 sm:mt-1 tabular-nums break-words">
-                  {formatCurrency(summary.totalMonthlyRentalValue, currencyCode, locale)}
+                  {formatCurrency(summary.rentalGrossTotal, currencyCode, locale)}
                 </span>
               </div>
 
               <div className="rounded-2xl bg-[#222325] text-white p-3.5 sm:p-4">
-                <span className="text-xs font-medium text-[#F9C083] block">Lettable Area</span>
-                <span className="text-sm sm:text-xl font-bold tracking-tight text-white block mt-0.5 sm:mt-1 tabular-nums">
-                  {totalLettableArea.toLocaleString()} m²
+                <span className="text-xs font-medium text-[#F9C083] block">Total Land Value</span>
+                <span className="text-sm sm:text-xl font-bold tracking-tight text-white block mt-0.5 sm:mt-1 tabular-nums break-words">
+                  {formatCurrency(summary.landValueTotal, currencyCode, locale)}
                 </span>
-                {avgRentPerSqM > 0 && (
-                  <span className="hidden sm:block text-[11px] text-white/70 mt-0.5">
-                    Avg {formatCurrency(avgRentPerSqM, currencyCode, locale)}/m²
-                  </span>
-                )}
               </div>
             </div>
           )}
@@ -304,9 +298,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               </div>
 
               <div className="rounded-2xl bg-[#F9C083] text-[#1E1E1E] p-3.5 sm:p-4">
-                <span className="text-xs font-medium text-[#2C2620] block">Annual Rent</span>
+                <span className="text-xs font-medium text-[#2C2620] block">Net Rental Value</span>
                 <span className="text-sm sm:text-xl font-bold tracking-tight text-[#1E1E1E] block mt-0.5 sm:mt-1 tabular-nums break-words">
-                  {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
+                  {formatCurrency(summary.rentalNetTotal, currencyCode, locale)}
                 </span>
               </div>
 
@@ -321,107 +315,105 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             </div>
           )}
 
-          {/* Rental Schedule Section */}
+          {/* Rental Valuation Sections: 1. Main Building, 2. Additional Component, 3. Land Value */}
           {showRental && (
-            <div className="mb-5 last:mb-0">
-              <h3 className="text-xs font-semibold text-slate-600 mb-2">
-                Rental Breakdown
-              </h3>
-
-              {/* Simple Mobile Cards (< sm) */}
-              <div className="sm:hidden space-y-2">
-                {rentalUnits.map((u, i) => {
-                  const c = calculateRentalItem(u);
-                  return (
-                    <div
-                      key={u.id}
-                      className="rounded-xl border border-slate-200 p-3 bg-white flex items-center justify-between gap-3"
-                    >
-                      <div className="min-w-0">
-                        <div className="text-xs font-semibold text-[#1E1E1E] truncate">
-                          {u.title || `Space ${i + 1}`}
-                        </div>
-                        <div className="text-[11px] text-slate-500 tabular-nums mt-0.5">
-                          {u.area.toLocaleString()} m² ×{' '}
-                          {formatCurrency(u.rentRatePerSqM, currencyCode, locale)}
-                          {u.period === 'monthly' ? '/mo' : '/yr'}
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="text-xs font-bold text-[#1B3352] tabular-nums">
-                          {formatCurrency(c.annualValue, currencyCode, locale)}
-                        </div>
-                        <div className="text-[10px] text-slate-400 tabular-nums">
-                          {formatCurrency(c.monthlyValue, currencyCode, locale)}/mo
-                        </div>
-                      </div>
+            <div className="space-y-4 mb-5 last:mb-0">
+              {rentalUnits.map((u, i) => {
+                const c = calculateRentalItem(u);
+                const heading = u.title.trim() || (i === 0 ? 'Main Building' : 'Additional Component');
+                return (
+                  <div key={u.id}>
+                    <h3 className="text-sm font-bold text-[#1B3352] mb-2">
+                      {i + 1}. {heading}
+                    </h3>
+                    <div className="overflow-hidden border border-slate-200 rounded-2xl">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-[#1B3352] text-white font-semibold">
+                          <tr>
+                            <th className="py-2.5 px-3.5">Description</th>
+                            <th className="py-2.5 px-3.5 text-right">Value</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 bg-white">
+                          <tr>
+                            <td className="py-2 px-3.5 text-slate-700">Area</td>
+                            <td className="py-2 px-3.5 text-right font-medium tabular-nums text-[#1E1E1E]">
+                              {c.area.toLocaleString(undefined, { maximumFractionDigits: 4 })} m²
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-3.5 text-slate-700">Rental rate per m²</td>
+                            <td className="py-2 px-3.5 text-right font-medium tabular-nums text-[#1E1E1E]">
+                              {formatCurrency(c.rentRatePerSqM, currencyCode, locale)}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-3.5 font-medium text-[#1E1E1E]">
+                              Gross Rental Value
+                            </td>
+                            <td className="py-2 px-3.5 text-right font-semibold tabular-nums text-[#1E1E1E]">
+                              {formatCurrency(c.grossValue, currencyCode, locale)}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-3.5 text-slate-700">
+                              Less: Outgoings @ {c.outgoingsPercent}%
+                            </td>
+                            <td className="py-2 px-3.5 text-right font-medium tabular-nums text-slate-700">
+                              {formatCurrency(c.outgoingsAmount, currencyCode, locale)}
+                            </td>
+                          </tr>
+                          <tr className="bg-[#F9C083]/25 font-bold">
+                            <td className="py-2.5 px-3.5 text-[#1E1E1E]">Net Rental Value</td>
+                            <td className="py-2.5 px-3.5 text-right tabular-nums text-[#1B3352]">
+                              {formatCurrency(c.netValue, currencyCode, locale)}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
-                  );
-                })}
-                <div className="rounded-xl bg-[#F9C083]/30 border border-[#D68B42]/30 p-3 flex items-center justify-between text-xs font-bold">
-                  <span className="text-[#1E1E1E]">Total Annual Rent</span>
-                  <span className="text-[#1B3352] tabular-nums">
-                    {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
-                  </span>
-                </div>
-              </div>
+                  </div>
+                );
+              })}
 
-              {/* Full Desktop Table (sm+) */}
-              <div className="hidden sm:block overflow-x-auto border border-slate-200 rounded-2xl">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#1B3352] text-white font-semibold">
-                    <tr>
-                      <th className="py-2.5 px-3.5">Description</th>
-                      <th className="py-2.5 px-3.5 text-right">Area (m²)</th>
-                      <th className="py-2.5 px-3.5 text-right">Rate / m²</th>
-                      <th className="py-2.5 px-3.5 text-right">Monthly</th>
-                      <th className="py-2.5 px-3.5 text-right">Annual Rent</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white">
-                    {rentalUnits.map((u, i) => {
-                      const c = calculateRentalItem(u);
-                      return (
-                        <tr key={u.id}>
-                          <td className="py-2.5 px-3.5 font-medium text-[#1E1E1E]">
-                            {u.title || `Space ${i + 1}`}
-                          </td>
-                          <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-700">
-                            {u.area.toLocaleString()} m²
-                          </td>
-                          <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-700">
-                            {formatCurrency(u.rentRatePerSqM, currencyCode, locale)}
-                            <span className="text-[10px] text-slate-400">
-                              {u.period === 'monthly' ? '/mo' : '/yr'}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-600">
-                            {formatCurrency(c.monthlyValue, currencyCode, locale)}
-                          </td>
-                          <td className="py-2.5 px-3.5 text-right font-bold tabular-nums text-[#1B3352]">
-                            {formatCurrency(c.annualValue, currencyCode, locale)}
+              {/* Section N+1: Land Value inside Rental Report */}
+              {template === 'rental' && (
+                <div>
+                  <h3 className="text-sm font-bold text-[#1B3352] mb-2">
+                    {rentalUnits.length + 1}. {land.title.trim() || 'Land Value'}
+                  </h3>
+                  <div className="overflow-hidden border border-slate-200 rounded-2xl">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-[#222325] text-white font-semibold">
+                        <tr>
+                          <th className="py-2.5 px-3.5">Description</th>
+                          <th className="py-2.5 px-3.5 text-right">Value</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 bg-white">
+                        <tr>
+                          <td className="py-2 px-3.5 text-slate-700">Area</td>
+                          <td className="py-2 px-3.5 text-right font-medium tabular-nums text-[#1E1E1E]">
+                            {landCalc.area.toLocaleString(undefined, { maximumFractionDigits: 4 })} m²
                           </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot className="bg-[#F9C083]/25 font-bold border-t border-slate-200">
-                    <tr>
-                      <td className="py-2.5 px-3.5 text-[#1E1E1E]">Total</td>
-                      <td className="py-2.5 px-3.5 text-right tabular-nums text-[#1E1E1E]">
-                        {totalLettableArea.toLocaleString()} m²
-                      </td>
-                      <td className="py-2.5 px-3.5 text-right text-slate-400">—</td>
-                      <td className="py-2.5 px-3.5 text-right tabular-nums text-[#2C2620]">
-                        {formatCurrency(summary.totalMonthlyRentalValue, currencyCode, locale)}
-                      </td>
-                      <td className="py-2.5 px-3.5 text-right tabular-nums text-[#1B3352]">
-                        {formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+                        <tr>
+                          <td className="py-2 px-3.5 text-slate-700">Land cost per m²</td>
+                          <td className="py-2 px-3.5 text-right font-medium tabular-nums text-[#1E1E1E]">
+                            {formatCurrency(landCalc.costPerSqM, currencyCode, locale)}
+                          </td>
+                        </tr>
+                        <tr className="bg-slate-50 font-bold">
+                          <td className="py-2.5 px-3.5 text-[#1E1E1E]">Total Land Value</td>
+                          <td className="py-2.5 px-3.5 text-right tabular-nums text-[#1B3352]">
+                            {formatCurrency(landCalc.value, currencyCode, locale)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -444,7 +436,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                       >
                         <div className="min-w-0">
                           <div className="text-xs font-semibold text-[#1E1E1E] truncate">
-                            {v.title || `Component ${i + 1}`}
+                            {v.title || (i === 0 ? 'Main Building' : `Component ${i + 1}`)}
                           </div>
                           <div className="text-[11px] text-slate-500 tabular-nums mt-0.5">
                             {v.area.toLocaleString()} m² · Depr. {v.depreciationPercent}%
@@ -488,7 +480,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                         return (
                           <tr key={v.id}>
                             <td className="py-2.5 px-3.5 font-medium text-[#1E1E1E]">
-                              {v.title || `Component ${i + 1}`}
+                              {v.title || (i === 0 ? 'Main Building' : `Component ${i + 1}`)}
                             </td>
                             <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-700">
                               {v.area.toLocaleString()} m²
@@ -540,7 +532,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 <div className="sm:hidden rounded-xl border border-slate-200 p-3 bg-white flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-xs font-semibold text-[#1E1E1E] truncate">
-                      {land.title || 'Main property land'}
+                      {land.title || 'Land Value'}
                     </div>
                     <div className="text-[11px] text-slate-500 tabular-nums mt-0.5">
                       {land.area.toLocaleString()} m² ×{' '}
@@ -559,14 +551,14 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                       <tr>
                         <th className="py-2.5 px-3.5">Description</th>
                         <th className="py-2.5 px-3.5 text-right">Area (m²)</th>
-                        <th className="py-2.5 px-3.5 text-right">Cost / m²</th>
-                        <th className="py-2.5 px-3.5 text-right">Land Value</th>
+                        <th className="py-2.5 px-3.5 text-right">Land cost per m²</th>
+                        <th className="py-2.5 px-3.5 text-right">Total Land Value</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
                       <tr>
                         <td className="py-2.5 px-3.5 font-medium text-[#1E1E1E]">
-                          {land.title || 'Main property land'}
+                          {land.title || 'Land Value'}
                         </td>
                         <td className="py-2.5 px-3.5 text-right tabular-nums text-slate-700">
                           {land.area.toLocaleString()} m²

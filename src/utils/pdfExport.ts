@@ -1,6 +1,11 @@
 import { jsPDF } from 'jspdf';
 import type { ConstructionVariable, LandData, RentalUnit, ValuationSummary } from '../types/valuation.ts';
-import { calculateConstructionItem, calculateRentalItem, formatCurrency } from './calculator.ts';
+import {
+  calculateConstructionItem,
+  calculateLandValue,
+  calculateRentalItem,
+  formatCurrency,
+} from './calculator.ts';
 import type { ReportTemplateType } from '../components/ReportModal.tsx';
 
 interface ExportPdfParams {
@@ -49,8 +54,7 @@ function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: num
 
 /**
  * Generates a Black & White, printer-friendly PDF that always retains
- * the full desktop A4 layout (side-by-side header, 3-column bento cards,
- * and multi-column desktop tables) even when exported from a mobile device.
+ * the full desktop A4 layout even when exported from a mobile device.
  */
 export async function exportValuationReportToPdf({
   template,
@@ -112,11 +116,6 @@ export async function exportValuationReportToPdf({
     day: 'numeric',
   });
 
-  const totalLettableArea = rentalUnits.reduce(
-    (sum, u) => sum + (Number(u.area) > 0 ? Number(u.area) : 0),
-    0
-  );
-
   // 1. HEADER BANNER (Printer-Friendly Black & White with Brand Geometry)
   const bannerH = 112;
   ctx.save();
@@ -125,7 +124,6 @@ export async function exportValuationReportToPdf({
   ctx.fill();
   ctx.clip();
 
-  // Subtle monochrome architectural ring motif (matching brand card aesthetic without wasting toner)
   ctx.beginPath();
   if (template === 'rental') {
     ctx.arc(PAD + 12, cursorY + 12, 66, 0, Math.PI * 2);
@@ -137,7 +135,6 @@ export async function exportValuationReportToPdf({
   ctx.stroke();
   ctx.restore();
 
-  // Crisp outer border on header banner
   ctx.save();
   drawRoundedRect(ctx, PAD, cursorY, CONTENT_W, bannerH, 20);
   ctx.strokeStyle = BW_BORDER_STRONG;
@@ -150,7 +147,7 @@ export async function exportValuationReportToPdf({
   ctx.textAlign = 'left';
   const defaultHeading =
     template === 'rental'
-      ? 'Rental Value'
+      ? 'Rental Valuation'
       : template === 'capital'
       ? 'Capital Value'
       : 'Property Valuation';
@@ -166,7 +163,7 @@ export async function exportValuationReportToPdf({
   ctx.fillStyle = BW_MUTED_GRAY;
   ctx.font = `600 11.5px ${fontFamily}`;
   ctx.fillText(
-    template === 'rental' ? 'Annual Rental Value' : 'Total Capital Value',
+    template === 'rental' ? 'Net Rental Value' : 'Total Capital Value',
     PAD + CONTENT_W - 26,
     cursorY + 44
   );
@@ -175,7 +172,7 @@ export async function exportValuationReportToPdf({
   ctx.font = `700 24px ${fontFamily}`;
   const heroVal =
     template === 'rental'
-      ? formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale)
+      ? formatCurrency(summary.rentalNetTotal, currencyCode, locale)
       : formatCurrency(summary.totalCapitalValue, currencyCode, locale);
   ctx.fillText(truncateText(ctx, heroVal, CONTENT_W * 0.42), PAD + CONTENT_W - 26, cursorY + 76);
   ctx.restore();
@@ -192,18 +189,18 @@ export async function exportValuationReportToPdf({
       ? [
           {
             isPrimary: true,
-            label: 'Annual Rent',
-            value: formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale),
+            label: 'Net Rental Value',
+            value: formatCurrency(summary.rentalNetTotal, currencyCode, locale),
           },
           {
             isPrimary: false,
-            label: 'Monthly Rent',
-            value: formatCurrency(summary.totalMonthlyRentalValue, currencyCode, locale),
+            label: 'Gross Rental Value',
+            value: formatCurrency(summary.rentalGrossTotal, currencyCode, locale),
           },
           {
             isPrimary: false,
-            label: 'Lettable Area',
-            value: `${totalLettableArea.toLocaleString()} m²`,
+            label: 'Total Land Value',
+            value: formatCurrency(summary.landValueTotal, currencyCode, locale),
           },
         ]
       : template === 'capital'
@@ -232,8 +229,8 @@ export async function exportValuationReportToPdf({
           },
           {
             isPrimary: false,
-            label: 'Annual Rent',
-            value: formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale),
+            label: 'Net Rental Value',
+            value: formatCurrency(summary.rentalNetTotal, currencyCode, locale),
           },
           {
             isPrimary: false,
@@ -277,20 +274,20 @@ export async function exportValuationReportToPdf({
     rows: string[][],
     footerRow?: { cells: string[] }
   ) => {
-    const rowH = 36;
-    const headerH = 38;
-    ensureSpace(headerH + rowH * 2 + 30);
+    const rowH = 34;
+    const headerH = 36;
+    ensureSpace(headerH + rowH * (rows.length + (footerRow ? 1 : 0)) + 28);
 
     // Section Label
     ctx.textAlign = 'left';
     ctx.fillStyle = BW_INK;
-    ctx.font = `700 12px ${fontFamily}`;
+    ctx.font = `700 13px ${fontFamily}`;
     ctx.fillText(sectionTitle, PAD, cursorY + 12);
     cursorY += 20;
 
     const tableTopY = cursorY;
 
-    // Table Header (Light gray fill + crisp black text & bottom border for printer efficiency)
+    // Table Header
     ctx.save();
     drawRoundedRect(ctx, PAD, cursorY, CONTENT_W, headerH, 12);
     ctx.fillStyle = BW_SURFACE_ALT;
@@ -314,10 +311,10 @@ export async function exportValuationReportToPdf({
       const colW = CONTENT_W * col.widthRatio;
       if (col.align === 'left') {
         ctx.textAlign = 'left';
-        ctx.fillText(col.label, colX + 14, cursorY + 23);
+        ctx.fillText(col.label, colX + 14, cursorY + 22);
       } else {
         ctx.textAlign = 'right';
-        ctx.fillText(col.label, colX + colW - 14, cursorY + 23);
+        ctx.fillText(col.label, colX + colW - 14, cursorY + 22);
       }
       colX += colW;
     });
@@ -353,7 +350,7 @@ export async function exportValuationReportToPdf({
         const isFirst = cIdx === 0;
 
         ctx.font = isLast
-          ? `700 11.5px ${fontFamily}`
+          ? `600 11.5px ${fontFamily}`
           : isFirst
           ? `500 11.5px ${fontFamily}`
           : `400 11.5px ${fontFamily}`;
@@ -362,10 +359,10 @@ export async function exportValuationReportToPdf({
         const cleanCell = truncateText(ctx, cellText, colW - 24);
         if (col.align === 'left') {
           ctx.textAlign = 'left';
-          ctx.fillText(cleanCell, rx + 14, cursorY + 22);
+          ctx.fillText(cleanCell, rx + 14, cursorY + 21);
         } else {
           ctx.textAlign = 'right';
-          ctx.fillText(cleanCell, rx + colW - 14, cursorY + 22);
+          ctx.fillText(cleanCell, rx + colW - 14, cursorY + 21);
         }
         rx += colW;
       });
@@ -396,10 +393,10 @@ export async function exportValuationReportToPdf({
         const cleanCell = truncateText(ctx, cellText, colW - 24);
         if (col.align === 'left') {
           ctx.textAlign = 'left';
-          ctx.fillText(cleanCell, fx + 14, cursorY + 23);
+          ctx.fillText(cleanCell, fx + 14, cursorY + 22);
         } else {
           ctx.textAlign = 'right';
-          ctx.fillText(cleanCell, fx + colW - 14, cursorY + 23);
+          ctx.fillText(cleanCell, fx + colW - 14, cursorY + 22);
         }
         fx += colW;
       });
@@ -412,39 +409,46 @@ export async function exportValuationReportToPdf({
     drawRoundedRect(ctx, PAD, tableTopY, CONTENT_W, cursorY - tableTopY, 12);
     ctx.stroke();
 
-    cursorY += 22;
+    cursorY += 20;
   };
 
-  // 3. RENTAL BREAKDOWN TABLE
+  // 3. RENTAL VALUATION TABLES (1. Main Building, 2. Additional Component, 3. Land Value)
   if (showRental) {
-    const rentalCols = [
-      { label: 'Description', widthRatio: 0.32, align: 'left' as const },
-      { label: 'Area (m²)', widthRatio: 0.16, align: 'right' as const },
-      { label: 'Rate / m²', widthRatio: 0.18, align: 'right' as const },
-      { label: 'Monthly', widthRatio: 0.17, align: 'right' as const },
-      { label: 'Annual Rent', widthRatio: 0.17, align: 'right' as const },
+    const twoCols = [
+      { label: 'Description', widthRatio: 0.6, align: 'left' as const },
+      { label: 'Value', widthRatio: 0.4, align: 'right' as const },
     ];
 
-    const rentalRows = rentalUnits.map((u, i) => {
+    rentalUnits.forEach((u, i) => {
       const c = calculateRentalItem(u);
-      return [
-        u.title || `Space ${i + 1}`,
-        `${u.area.toLocaleString()} m²`,
-        `${formatCurrency(u.rentRatePerSqM, currencyCode, locale)}${u.period === 'monthly' ? '/mo' : '/yr'}`,
-        formatCurrency(c.monthlyValue, currencyCode, locale),
-        formatCurrency(c.annualValue, currencyCode, locale),
+      const heading = u.title.trim() || (i === 0 ? 'Main Building' : 'Additional Component');
+      const rows = [
+        ['Area', `${c.area.toLocaleString(undefined, { maximumFractionDigits: 4 })} m²`],
+        ['Rental rate per m²', formatCurrency(c.rentRatePerSqM, currencyCode, locale)],
+        ['Gross Rental Value', formatCurrency(c.grossValue, currencyCode, locale)],
+        [
+          `Less: Outgoings @ ${c.outgoingsPercent}%`,
+          formatCurrency(c.outgoingsAmount, currencyCode, locale),
+        ],
       ];
+
+      drawTableSection(`${i + 1}. ${heading}`, twoCols, rows, {
+        cells: ['Net Rental Value', formatCurrency(c.netValue, currencyCode, locale)],
+      });
     });
 
-    drawTableSection('Rental Breakdown', rentalCols, rentalRows, {
-      cells: [
-        'Total',
-        `${totalLettableArea.toLocaleString()} m²`,
-        '—',
-        formatCurrency(summary.totalMonthlyRentalValue, currencyCode, locale),
-        formatCurrency(summary.totalAnnualRentalValue, currencyCode, locale),
-      ],
-    });
+    if (template === 'rental') {
+      const landCalc = calculateLandValue(land);
+      const landHeading = land.title.trim() || 'Land Value';
+      const landRows = [
+        ['Area', `${landCalc.area.toLocaleString(undefined, { maximumFractionDigits: 4 })} m²`],
+        ['Land cost per m²', formatCurrency(landCalc.costPerSqM, currencyCode, locale)],
+      ];
+
+      drawTableSection(`${rentalUnits.length + 1}. ${landHeading}`, twoCols, landRows, {
+        cells: ['Total Land Value', formatCurrency(landCalc.value, currencyCode, locale)],
+      });
+    }
   }
 
   // 4. CAPITAL BREAKDOWN TABLES (Construction + Land)
@@ -461,7 +465,7 @@ export async function exportValuationReportToPdf({
     const constructionRows = constructionVariables.map((v, i) => {
       const c = calculateConstructionItem(v);
       return [
-        v.title || `Component ${i + 1}`,
+        v.title || (i === 0 ? 'Main Building' : `Component ${i + 1}`),
         `${v.area.toLocaleString()} m²`,
         formatCurrency(v.costPerSqM, currencyCode, locale),
         formatCurrency(c.grossValue, currencyCode, locale),
@@ -484,13 +488,13 @@ export async function exportValuationReportToPdf({
     const landCols = [
       { label: 'Description', widthRatio: 0.4, align: 'left' as const },
       { label: 'Area (m²)', widthRatio: 0.2, align: 'right' as const },
-      { label: 'Cost / m²', widthRatio: 0.2, align: 'right' as const },
-      { label: 'Land Value', widthRatio: 0.2, align: 'right' as const },
+      { label: 'Land cost per m²', widthRatio: 0.2, align: 'right' as const },
+      { label: 'Total Land Value', widthRatio: 0.2, align: 'right' as const },
     ];
 
     const landRows = [
       [
-        land.title || 'Main property land',
+        land.title || 'Land Value',
         `${land.area.toLocaleString()} m²`,
         formatCurrency(land.costPerSqM, currencyCode, locale),
         formatCurrency(summary.landValueTotal, currencyCode, locale),
@@ -519,7 +523,7 @@ export async function exportValuationReportToPdf({
   const slug = (
     reportTitle ||
     (template === 'rental'
-      ? 'rental-value-report'
+      ? 'rental-valuation-report'
       : template === 'capital'
       ? 'capital-value-report'
       : 'property-valuation-report')

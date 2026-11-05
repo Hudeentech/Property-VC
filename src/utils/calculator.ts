@@ -58,18 +58,36 @@ export function calculateLandValue(land: { area: number; costPerSqM: number }) {
   };
 }
 
-export function calculateRentalItem(item: { area: number; rentRatePerSqM: number; period?: 'annual' | 'monthly' }) {
+export function calculateRentalItem(item: {
+  area: number;
+  rentRatePerSqM: number;
+  outgoingsPercent?: number;
+  period?: 'annual' | 'monthly';
+}) {
   const area = sanitizeNumber(item.area);
   const rate = sanitizeNumber(item.rentRatePerSqM);
+  const outgoingsPercent = Math.min(100, sanitizeNumber(item.outgoingsPercent));
   const isMonthly = item.period === 'monthly';
-  const rawValue = area * rate;
-  const annualValue = isMonthly ? rawValue * 12 : rawValue;
-  const monthlyValue = isMonthly ? rawValue : rawValue / 12;
+
+  const grossValue = area * rate;
+  const outgoingsAmount = grossValue * (outgoingsPercent / 100);
+  const netValue = Math.max(0, grossValue - outgoingsAmount);
+
+  const annualGrossValue = isMonthly ? grossValue * 12 : grossValue;
+  const annualOutgoingsAmount = isMonthly ? outgoingsAmount * 12 : outgoingsAmount;
+  const annualValue = isMonthly ? netValue * 12 : netValue;
+  const monthlyValue = isMonthly ? netValue : netValue / 12;
 
   return {
     area,
     rentRatePerSqM: rate,
-    rawValue,
+    outgoingsPercent,
+    grossValue,
+    outgoingsAmount,
+    netValue,
+    rawValue: grossValue,
+    annualGrossValue,
+    annualOutgoingsAmount,
     annualValue,
     monthlyValue,
   };
@@ -98,13 +116,21 @@ export function calculateValuationSummary(
 
   const totalCapitalValue = constructionNetTotal + landValueTotal;
 
+  let rentalGrossTotal = 0;
+  let rentalOutgoingsTotal = 0;
+  let rentalNetTotal = 0;
   let totalAnnualRentalValue = 0;
   let totalMonthlyRentalValue = 0;
+  let totalLettableAreaSqM = 0;
 
   for (const unit of rentalUnits) {
     const calc = calculateRentalItem(unit);
+    rentalGrossTotal += calc.annualGrossValue;
+    rentalOutgoingsTotal += calc.annualOutgoingsAmount;
+    rentalNetTotal += calc.annualValue;
     totalAnnualRentalValue += calc.annualValue;
     totalMonthlyRentalValue += calc.monthlyValue;
+    totalLettableAreaSqM += calc.area;
   }
 
   const grossRentalYieldPercent =
@@ -123,10 +149,14 @@ export function calculateValuationSummary(
     constructionNetTotal,
     landValueTotal,
     totalCapitalValue,
+    rentalGrossTotal,
+    rentalOutgoingsTotal,
+    rentalNetTotal,
     totalAnnualRentalValue,
     totalMonthlyRentalValue,
     grossRentalYieldPercent,
     totalBuiltAreaSqM,
+    totalLettableAreaSqM,
     averageCapitalPerSqM,
   };
 }
@@ -137,11 +167,12 @@ export function formatCurrency(
   locale: string = 'en-NG'
 ): string {
   const safeVal = isFinite(value) && !isNaN(value) ? value : 0;
+  const hasDecimals = Math.abs(safeVal - Math.round(safeVal)) > 0.001;
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: currencyCode,
-      minimumFractionDigits: 2,
+      minimumFractionDigits: hasDecimals ? 2 : 0,
       maximumFractionDigits: 2,
     }).format(safeVal);
   } catch {
@@ -149,7 +180,7 @@ export function formatCurrency(
     const matching = SUPPORTED_CURRENCIES.find((c) => c.code === currencyCode);
     const sym = matching ? matching.symbol : currencyCode;
     return `${sym}${safeVal.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
+      minimumFractionDigits: hasDecimals ? 2 : 0,
       maximumFractionDigits: 2,
     })}`;
   }

@@ -37,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       {activeTab !== 'home' && (
-        <header className="mb-6">
+        <header className="pt-5 sm:pt-6 md:pt-5 pb-4 md:shrink-0 bg-[#f8fafc] dark:bg-[#12151C] transition-colors">
           <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
             {/* Brand Title that returns to Home */}
             <div className="flex items-center gap-3">

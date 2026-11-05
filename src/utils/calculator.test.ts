@@ -37,10 +37,17 @@ test('calculateLandValue computes area * cost', () => {
   assert.equal(result.value, 25000000);
 });
 
-test('calculateRentalItem computes rental value correctly', () => {
-  const result = calculateRentalItem({ area: 250, rentRatePerSqM: 10000, period: 'annual' });
-  assert.equal(result.annualValue, 2500000);
-  assert.equal(result.monthlyValue, 2500000 / 12);
+test('calculateRentalItem computes gross, outgoings, and net rental value correctly', () => {
+  const result = calculateRentalItem({
+    area: 165.018,
+    rentRatePerSqM: 30000,
+    outgoingsPercent: 10,
+    period: 'annual',
+  });
+  assert.equal(result.grossValue, 4950540);
+  assert.equal(result.outgoingsAmount, 495054);
+  assert.equal(result.netValue, 4455486);
+  assert.equal(result.annualValue, 4455486);
 });
 
 test('calculateValuationSummary aggregates capital, rental, and yield', () => {
@@ -50,20 +57,20 @@ test('calculateValuationSummary aggregates capital, rental, and yield', () => {
   ];
   const land = { title: 'Main Land', area: 400, costPerSqM: 25000 }; // 10M
   const rentals = [
-    { id: 'r1', title: 'Offices', area: 200, rentRatePerSqM: 15000, period: 'annual' as const }, // 3M
+    { id: 'r1', title: 'Main Building', area: 200, rentRatePerSqM: 15000, outgoingsPercent: 10, period: 'annual' as const }, // Gross 3M, Outgoings 300k, Net 2.7M
   ];
 
   const summary = calculateValuationSummary(construction, land, rentals);
-  // Net construction: 18M + 2M = 20M
-  // Land: 10M
-  // Total capital: 30M
   assert.equal(summary.constructionNetTotal, 20000000);
   assert.equal(summary.landValueTotal, 10000000);
   assert.equal(summary.totalCapitalValue, 30000000);
-  assert.equal(summary.totalAnnualRentalValue, 3000000);
+  assert.equal(summary.rentalGrossTotal, 3000000);
+  assert.equal(summary.rentalOutgoingsTotal, 300000);
+  assert.equal(summary.rentalNetTotal, 2700000);
+  assert.equal(summary.totalAnnualRentalValue, 2700000);
 
-  // Yield: 3M / 30M = 10%
-  assert.equal(summary.grossRentalYieldPercent, 10);
+  // Yield: 2.7M / 30M = 9%
+  assert.equal(summary.grossRentalYieldPercent, 9);
 });
 
 test('formatCurrency formats values properly', () => {
